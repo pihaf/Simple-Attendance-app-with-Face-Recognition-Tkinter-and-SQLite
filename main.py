@@ -1,9 +1,12 @@
 import numpy as np
 import face_recognition
 import cv2
+import sqlite3
 import os
 
 video_capture = cv2.VideoCapture(0)
+
+# Connect to database 
 
 # Create lists to store images information
 existed_image_ids = []
