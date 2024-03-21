@@ -73,12 +73,16 @@ while True:
         left *= 4
 
         # Check status
-        if existed_status[best_match_index] == 'Unmark':
-            color = (0, 0, 255)
-            text = 'Unmark'
+        if name != 'Unknown':
+            if existed_status[best_match_index] == 'Unmark':
+                color = (0, 0, 255)
+                text = 'Unmark'
+            elif existed_status[best_match_index] == 'Marked':
+                color = (0,128,0)
+                text = 'Marked'
         else:
-            color = (0,128,0)
-            text = 'Marked'
+            color = (0, 0, 255)
+            text = ''
 
         # Draw a box around the face
         cv2.rectangle(frame, (left, top), (right, bottom), color, 2)
