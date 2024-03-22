@@ -35,6 +35,20 @@ def create_tables():
                     FOREIGN KEY (student_id) REFERENCES students(student_id),
                     FOREIGN KEY (course_id) REFERENCES courses(id))''')
 
+    # Create the student_accounts table
+    cursor.execute('''CREATE TABLE IF NOT EXISTS student_accounts
+                    (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    student_id TEXT UNIQUE,
+                    username TEXT,
+                    password TEXT,
+                    FOREIGN KEY (student_id) REFERENCES students(student_id))''')
+
+    # Create the admin_accounts table
+    cursor.execute('''CREATE TABLE IF NOT EXISTS admin_accounts
+                    (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT UNIQUE,
+                    password TEXT)''')
+
     # Commit the changes
     conn.commit()
 
@@ -75,6 +89,30 @@ def load_sample_data():
         course_id, course_name, day_of_week, periods, location = data
         cursor.execute('INSERT INTO courses (course_id, course_name, day_of_week, periods, location) VALUES (?, ?, ?, ?, ?)',
                        (course_id, course_name, day_of_week, periods, location))
+
+    # Insert sample student account data
+    student_account_data = [
+        ('S001', 'student1', 'password1'),
+        ('S002', 'student2', 'password2'),
+        ('S003', 'student3', 'password3')
+    ]
+
+    for data in student_account_data:
+        student_id, username, password = data
+        cursor.execute('INSERT INTO student_accounts (student_id, username, password) VALUES (?, ?, ?)',
+                       (student_id, username, password))
+
+    # Insert sample admin account data
+    admin_account_data = [
+        ('admin1', 'adminpassword1'),
+        ('admin2', 'adminpassword2'),
+        ('admin3', 'adminpassword3')
+    ]
+
+    for data in admin_account_data:
+        username, password = data
+        cursor.execute('INSERT INTO admin_accounts (username, password) VALUES (?, ?)',
+                       (username, password))
 
     # Commit the changes
     conn.commit()
