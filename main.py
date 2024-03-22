@@ -1,105 +1,126 @@
-import numpy as np
-import face_recognition
-import cv2
-import sqlite3
-import os
+import tkinter as tk
 
-video_capture = cv2.VideoCapture(0)
+def take_attendance():
+    # Code for the "Take Attendance" functionality
+    print("Taking attendance...")
 
-# Connect to database 
+def exit_app():
+    root.destroy()
 
-# Create lists to store images information
-existed_image_ids = []
-existed_image_names = ['Biden', 'Nam', 'Obama']
-existed_status = ['Unmark', 'Marked', 'Unmark']
-existed_image_encodings = []
+def show_account():
+    # Code for the "Account" functionality
+    print("Showing account...")
 
-# Load and encode existing images
-image_dir = os.listdir('images')
-for img_path in image_dir:
-    # print(img_path.split('.')[0])
-    image = face_recognition.load_image_file('images/' + img_path)
-    face_encoding = face_recognition.face_encodings(image)[0]
-    existed_image_ids.append(img_path.split('.')[0])
-    existed_image_encodings.append(face_encoding)
+def show_about():
+    # Code for the "About" functionality
+    print("Showing about...")
 
-# Initialize some variables
-face_locations = []
-face_encodings = []
-face_names = []
-process_this_frame = True
+def show_menu():
+    menu_frame.pack()
+    attendance_frame.pack_forget()
+    account_frame.pack_forget()
+    about_frame.pack_forget()
 
-# Live face capture using device camera
-while True:
-    # Grab a single frame of video
-    ret, frame = video_capture.read()
+def show_attendance():
+    menu_frame.pack_forget()
+    attendance_frame.pack()
+    account_frame.pack_forget()
+    about_frame.pack_forget()
 
-    # Only process every other frame of video to save time
-    if process_this_frame:
-        # Resize frame of video to 1/4 size for faster face recognition processing
-        small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
+def show_account_scene():
+    menu_frame.pack_forget()
+    attendance_frame.pack_forget()
+    account_frame.pack()
+    about_frame.pack_forget()
 
-        # Convert the image from BGR color (which OpenCV uses) to RGB color (which face_recognition uses)
-        #rgb_small_frame = np.ascontiguousarray(small_frame[:, :, ::-1])
-        rgb_small_frame = cv2.cvtColor(small_frame, cv2.COLOR_BGR2RGB)
+def show_about_scene():
+    menu_frame.pack_forget()
+    attendance_frame.pack_forget()
+    account_frame.pack_forget()
+    about_frame.pack()
 
-        # Find all the faces and face encodings in the current frame of video
-        face_locations = face_recognition.face_locations(rgb_small_frame)
-        face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
+root = tk.Tk()
+root.title("Attendance App")
 
-        face_names = []
-        for face_encoding in face_encodings:
-            # See if the face is a match for the known face(s)
-            matches = face_recognition.compare_faces(existed_image_encodings, face_encoding)
-            name = "Unknown"
+# Configure window size and position
+window_width = 600
+window_height = 400
 
-            # Use the known face with the smallest distance to the new face
-            face_distances = face_recognition.face_distance(existed_image_encodings, face_encoding)
-            best_match_index = np.argmin(face_distances)
-            if matches[best_match_index]:
-                name = existed_image_names[best_match_index]
+screen_width = root.winfo_screenwidth()
+screen_height = root.winfo_screenheight()
 
-            face_names.append(name)
+x = (screen_width // 2) - (window_width // 2)
+y = (screen_height // 2) - (window_height // 2)
 
-    process_this_frame = not process_this_frame
+root.geometry(f"{window_width}x{window_height}+{x}+{y}")
+root.resizable(True, True)
 
+# Make the window draggable
+def drag_window(event):
+    x = root.winfo_pointerx() - root._offset_x
+    y = root.winfo_pointery() - root._offset_y
+    root.geometry(f"+{x}+{y}")
 
-    # Display the results
-    for (top, right, bottom, left), name in zip(face_locations, face_names):
-        # Scale back up face locations since the frame we detected in was scaled to 1/4 size
-        top *= 4
-        right *= 4
-        bottom *= 4
-        left *= 4
+def start_drag(event):
+    root._offset_x = event.x
+    root._offset_y = event.y
 
-        # Check status
-        if name != 'Unknown':
-            if existed_status[best_match_index] == 'Unmark':
-                color = (0, 0, 255)
-                text = 'Unmark'
-            elif existed_status[best_match_index] == 'Marked':
-                color = (0,128,0)
-                text = 'Marked'
-        else:
-            color = (0, 0, 255)
-            text = ''
+title_bar = tk.Frame(root, bg="gray")
+title_bar.bind("<B1-Motion>", drag_window)
+title_bar.bind("<Button-1>", start_drag)
+title_bar.pack(fill="x")
 
-        # Draw a box around the face
-        cv2.rectangle(frame, (left, top), (right, bottom), color, 2)
+# Create the main menu frame
+menu_frame = tk.Frame(root)
 
-        # Draw a label with a name below the face
-        cv2.rectangle(frame, (left, bottom - 35), (right, bottom + 40), color, cv2.FILLED)
-        font = cv2.FONT_HERSHEY_DUPLEX
-        cv2.putText(frame, "Name: " + name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
-        cv2.putText(frame, "Status: " + text, (left + 6, bottom + 30), font, 1.0, (255, 255, 255), 1)
+attendance_button = tk.Button(menu_frame, text="Take Attendance", command=show_attendance)
+attendance_button.pack(pady=10)
 
-    # Display the resulting image
-    cv2.imshow('Attendance app', frame)
+account_button = tk.Button(menu_frame, text="Account", command=show_account_scene)
+account_button.pack(pady=10)
 
-    # Hit 'q' on the keyboard to quit!
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+about_button = tk.Button(menu_frame, text="About", command=show_about_scene)
+about_button.pack(pady=10)
 
-# Release handle to the webcam
-video_capture.release()
-cv2.destroyAllWindows()
+exit_button = tk.Button(menu_frame, text="Exit", command=exit_app)
+exit_button.pack(pady=10)
+
+menu_frame.pack(padx=20, pady=20)
+
+# Create the attendance frame
+attendance_frame = tk.Frame(root)
+
+attendance_label = tk.Label(attendance_frame, text="Attendance Scene", font=("Arial", 16))
+attendance_label.pack(pady=10)
+
+back_button_attendance = tk.Button(attendance_frame, text="Back", command=show_menu)
+back_button_attendance.pack(pady=10)
+
+attendance_frame.pack(padx=20, pady=20)
+
+# Create the account frame
+account_frame = tk.Frame(root)
+
+account_label = tk.Label(account_frame, text="Account Scene", font=("Arial", 16))
+account_label.pack(pady=10)
+
+back_button_account = tk.Button(account_frame, text="Back", command=show_menu)
+back_button_account.pack(pady=10)
+
+account_frame.pack(padx=20, pady=20)
+
+# Create the about frame
+about_frame = tk.Frame(root)
+
+about_label = tk.Label(about_frame, text="About Scene", font=("Arial", 16))
+about_label.pack(pady=10)
+
+back_button_about = tk.Button(about_frame, text="Back", command=show_menu)
+back_button_about.pack(pady=10)
+
+about_frame.pack(padx=20, pady=20)
+
+# Show the initial menu scene
+show_menu()
+
+root.mainloop()
