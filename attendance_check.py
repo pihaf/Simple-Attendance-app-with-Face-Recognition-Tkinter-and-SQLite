@@ -52,6 +52,7 @@ while True:
             # See if the face is a match for the known face(s)
             matches = face_recognition.compare_faces(existed_image_encodings, face_encoding)
             name = "Unknown"
+            course_name = "None"
 
             # Use the known face with the smallest distance to the new face
             face_distances = face_recognition.face_distance(existed_image_encodings, face_encoding)
@@ -91,7 +92,8 @@ while True:
         cv2.rectangle(frame, (left, bottom - 35), (right, bottom + 40), color, cv2.FILLED)
         font = cv2.FONT_HERSHEY_DUPLEX
         cv2.putText(frame, "Name: " + name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
-        cv2.putText(frame, "Status: " + text, (left + 6, bottom + 30), font, 1.0, (255, 255, 255), 1)
+        cv2.putText(frame, "Course: " + course_name, (left + 6, bottom + 30), font, 1.0, (255, 255, 255), 1)
+        cv2.putText(frame, "Status: " + text, (left + 6, bottom + 60), font, 1.0, (255, 255, 255), 1)
 
     # Display the resulting image
     cv2.imshow('Attendance app', frame)
