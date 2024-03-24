@@ -3,25 +3,65 @@ import face_recognition
 import cv2
 import sqlite3
 import os
+from geopy.geocoders import Nominatim
+import database_functions
+import datetime
+
+def get_day_of_week():
+    current_date = datetime.date.today()
+
+    # Convert the date to the day of the week
+    day_of_week = current_date.strftime("%A")
+
+    return day_of_week
+
+def get_current_period():
+    current_time = datetime.datetime.now().time()
+
+    if current_time >= datetime.time(7, 0) and current_time < datetime.time(8, 50):
+        return '1-2'
+    elif current_time >= datetime.time(9, 0) and current_time < datetime.time(10, 50):
+        return '3-4'
+    elif current_time >= datetime.time(11, 0) and current_time < datetime.time(12, 50):
+        return '5-6'
+    elif current_time >= datetime.time(13, 0) and current_time < datetime.time(14, 50):
+        return '7-8'
+    elif current_time >= datetime.time(15, 0) and current_time < datetime.time(16, 50):
+        return '9-10'
+    elif current_time >= datetime.time(17, 0) and current_time < datetime.time(18, 50):
+        return '11-12'
+    else:
+        return 'No matching period found.'
+
+# The problem of matching the location which a student take attendance with that of a course is a bit complex
+# and dependent on different devices GPS so I gave up on this part
+# def get_location():
+# Get latitude and longtitude by making request to a ip geolocation website
+#
+# Use geopy to find the name of the location
+#     geolocator = Nominatim(user_agent="my_app")
+#     location = geolocator.reverse((latitude, longitude))
+#     return location
 
 video_capture = cv2.VideoCapture(0)
 
-# Connect to database 
+student_ids = database_functions.get_all_students_ids()
+student_names = database_functions.get_all_students_names()
+student_images = database_functions.get_all_students_images()
+status = ['Unmark', 'Marked', 'Unmark']
+student_image_encodings = []
 
-# Create lists to store images information
-existed_image_ids = []
-existed_image_names = ['Biden', 'Nam', 'Obama']
-existed_status = ['Unmark', 'Marked', 'Unmark']
-existed_image_encodings = []
-
-# Load and encode existing images
-image_dir = os.listdir('images')
-for img_path in image_dir:
-    # print(img_path.split('.')[0])
-    image = face_recognition.load_image_file('images/' + img_path)
-    face_encoding = face_recognition.face_encodings(image)[0]
-    existed_image_ids.append(img_path.split('.')[0])
-    existed_image_encodings.append(face_encoding)
+for row in student_images:
+    image_bytes = row[0]
+    # Convert the image bytes to a numpy array
+    image_array = np.frombuffer(image_bytes, np.uint8)
+    # Decode the image array
+    image = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
+    # Convert the image from BGR to RGB (face_recognition uses RGB format)
+    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    # Encode the face in the image
+    face_encoding = face_recognition.face_encodings(image_rgb)[0]
+    student_image_encodings.append(face_encoding)
 
 # Initialize some variables
 face_locations = []
@@ -50,16 +90,24 @@ while True:
         face_names = []
         for face_encoding in face_encodings:
             # See if the face is a match for the known face(s)
-            matches = face_recognition.compare_faces(existed_image_encodings, face_encoding)
+            matches = face_recognition.compare_faces(student_image_encodings, face_encoding)
             name = "Unknown"
-            course_name = "None"
+            student_id = ''
+            course = []
+            course_name = 'No course found'
 
             # Use the known face with the smallest distance to the new face
-            face_distances = face_recognition.face_distance(existed_image_encodings, face_encoding)
+            face_distances = face_recognition.face_distance(student_image_encodings, face_encoding)
             best_match_index = np.argmin(face_distances)
             if matches[best_match_index]:
-                name = existed_image_names[best_match_index]
+                name = student_names[best_match_index]
+                student_id = student_ids[best_match_index]
 
+                # Get the course the student is supposed to study at this time 
+                course = database_functions.get_student_course_by_schedule(student_id=student_id, day_of_week=get_day_of_week(), periods=get_current_period())
+                if course != None:
+                    course_name = course[1]
+                    
             face_names.append(name)
 
     process_this_frame = not process_this_frame
@@ -75,10 +123,10 @@ while True:
 
         # Check status
         if name != 'Unknown':
-            if existed_status[best_match_index] == 'Unmark':
+            if status[best_match_index] == 'Unmark':
                 color = (0, 0, 255)
                 text = 'Unmark'
-            elif existed_status[best_match_index] == 'Marked':
+            elif status[best_match_index] == 'Marked':
                 color = (0,128,0)
                 text = 'Marked'
         else:

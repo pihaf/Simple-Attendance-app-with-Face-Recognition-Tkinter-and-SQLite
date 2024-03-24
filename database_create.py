@@ -88,9 +88,9 @@ def load_sample_data():
 
     # Insert sample course data
     course_data = [
-        ('C001', 'Mathematics', 'Monday', '1-2', 'Room 101'),
-        ('C002', 'Science', 'Tuesday', '3-4', 'Room 202'),
-        ('C003', 'English', 'Wednesday', '5-6', 'Room 303')
+        ('C001', 'Mathematics', 'Monday', '1-2', 'Đại học Quốc gia Hà Nội'),
+        ('C002', 'Science', 'Tuesday', '3-4', 'Đại học Quốc gia Hà Nội'),
+        ('C003', 'English', 'Wednesday', '5-6', 'Đại học Quốc gia Hà Nội')
     ]
 
     for data in course_data:
