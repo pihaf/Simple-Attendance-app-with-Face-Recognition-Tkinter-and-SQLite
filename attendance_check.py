@@ -83,11 +83,12 @@ face_locations = []
 face_encodings = []
 face_names = []
 process_this_frame = True
+student_id_found = ''
 
 # Live face capture using device camera
-
 def show_frame():
     global process_this_frame  
+    global student_id_found
     # Grab a single frame of video
     ret, frame = cap.read()
     frame = cv2.flip(frame, 1)
@@ -106,12 +107,12 @@ def show_frame():
 
     face_names = []
     course_data = []
-    course_name = 'No course found'
+    course_name = 'Not found'
+    student_id = 'Not found'
     for face_encoding in face_encodings:
         # See if the face is a match for the known face(s)
         matches = face_recognition.compare_faces(student_image_encodings, face_encoding)
         name = "Unknown"
-        student_id = ''
 
         # Use the known face with the smallest distance to the new face
         face_distances = face_recognition.face_distance(student_image_encodings, face_encoding)
@@ -119,6 +120,7 @@ def show_frame():
         if matches[best_match_index]:
             name = student_names[best_match_index]
             student_id = student_ids[best_match_index]
+            student_id_found = student_ids[best_match_index]
 
             # Get the course the student is supposed to study at this time 
             course_data = database_functions.get_student_course_by_schedule(student_id=student_id, day_of_week=get_day_of_week(), periods=get_current_period())
@@ -154,8 +156,9 @@ def show_frame():
         cv2.rectangle(frame, (left, bottom - 35), (right, bottom + 40), color, cv2.FILLED)
         font = cv2.FONT_HERSHEY_DUPLEX
         cv2.putText(frame, "Name: " + name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
-        cv2.putText(frame, "Course: " + course_name, (left + 6, bottom + 30), font, 1.0, (255, 255, 255), 1)
-        cv2.putText(frame, "Status: " + text, (left + 6, bottom + 60), font, 1.0, (255, 255, 255), 1)
+        cv2.putText(frame, "ID: " + student_id, (left + 6, bottom +30), font, 1.0, (255, 255, 255), 1)
+        cv2.putText(frame, "Course: " + course_name, (left + 6, bottom + 60), font, 1.0, (255, 255, 255), 1)
+        cv2.putText(frame, "Status: " + text, (left + 6, bottom +90), font, 1.0, (255, 255, 255), 1)
 
     cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)  # Convert frame back to RGBA format
     img = Image.fromarray(cv2image)
@@ -167,7 +170,8 @@ def show_frame():
 
 # Button function to be executed when the button is pressed
 def button_pressed():
-    print("Button pressed!")
+    result = database_functions.create_attendance_record(student_id_found, get_day_of_week(), get_current_period())
+    print(result)
 
 # Button widget
 button = tk.Button(window, text="Press Me", command=button_pressed)
