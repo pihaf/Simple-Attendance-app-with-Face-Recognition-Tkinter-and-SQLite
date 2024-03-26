@@ -71,10 +71,10 @@ def get_student_course_by_schedule(student_id, day_of_week, periods):
     return list(row) if row else None
 
 # Create an attendance record if relevant info matched with that of the course
-def create_attendance_record(student_id, day_of_week, periods, location):
+def create_attendance_record(student_id, day_of_week, periods):
     conn = sqlite3.connect('attendance.db')
     cursor = conn.cursor()
-    course = get_student_course_by_schedule(student_id, day_of_week, periods, location)
+    course = get_student_course_by_schedule(student_id, day_of_week, periods)
     if course:
         timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         cursor.execute('INSERT INTO attendance (student_id, course_id, timestamp, status) VALUES (?, ?, ?, ?)',

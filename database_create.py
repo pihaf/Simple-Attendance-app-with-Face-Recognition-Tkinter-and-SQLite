@@ -88,15 +88,34 @@ def load_sample_data():
 
     # Insert sample course data
     course_data = [
-        ('C001', 'Mathematics', 'Monday', '1-2', 'Đại học Quốc gia Hà Nội'),
-        ('C002', 'Science', 'Tuesday', '3-4', 'Đại học Quốc gia Hà Nội'),
-        ('C003', 'English', 'Wednesday', '5-6', 'Đại học Quốc gia Hà Nội')
+        ('INT2214 23', 'Operating system concepts','Monday', '1-2', 'Đại học Quốc gia Hà Nội'),
+        ('INT3235E 20', 'Social network analysis', 'Monday','3-4', 'Đại học Quốc gia Hà Nội'),
+        ('INT3229E 20', 'Big data', 'Monday', '5-6', 'Đại học Quốc gia Hà Nội'),
+        ('INT3225E 20', 'Business intelligence','Monday', '7-8', 'Đại học Quốc gia Hà Nội'),
+        ('INT2020E 20', 'Design information system','Monday', '9-10', 'Đại học Quốc gia Hà Nội'),
+        ('INT3306E 20', 'Web development','Monday', '11-12', 'Đại học Quốc gia Hà Nội'),
+        ('PES1015', 'Basketball', 'Tuesday', '3-4', 'Đại học Quốc gia Hà Nội'),
+        ('PES1016', 'Football', 'Wednesday', '5-6', 'Đại học Quốc gia Hà Nội')
     ]
 
     for data in course_data:
         course_id, course_name, day_of_week, periods, location = data
         cursor.execute('INSERT INTO courses (course_id, course_name, day_of_week, periods, location) VALUES (?, ?, ?, ?, ?)',
                        (course_id, course_name, day_of_week, periods, location))
+
+    days = ['Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    periods = ['1-2', '3-4', '5-6', '7-8', '9-10', '11-12']
+    course_names = ['Database management', 'Data mining', 'Artificial intelligence', 'Software engineering', 'Computer networks']
+    course_ids = ['INT4321E 20', 'INT5432E 20', 'INT6543E 20', 'INT7654E 20', 'INT8765E 20']
+
+    for day in days:
+        for period in periods:
+            for i in range(len(course_names)):
+                course_id = course_ids[i]
+                course_name = course_names[i]
+                location = 'Đại học Quốc gia Hà Nội'
+                cursor.execute('INSERT INTO courses (course_id, course_name, day_of_week, periods, location) VALUES (?, ?, ?, ?, ?)',
+                            (course_id, course_name, day, period, location))
 
     # Insert sample student account data
     student_account_data = [
@@ -124,9 +143,14 @@ def load_sample_data():
 
     # Insert sample student course data
     student_course_data = [
-        ('S001', 'C001'),  # Student S001 is studying course C001 (Mathematics)
-        ('S002', 'C002'),  # Student S002 is studying course C002 (Science)
-        ('S003', 'C003')   # Student S003 is studying course C003 (English)
+        ('S001', 'INT2214 23'),  
+        ('S002', 'INT2214 23'),  
+        ('S002','INT3235E 20'),
+        ('S002','INT3229E 20'),
+        ('S002','INT3225E 20'),
+        ('S002','INT2020E 20'),
+        ('S002','INT3306E 20'),
+        ('S003', 'INT2214 23')   
     ]
 
     for data in student_course_data:

@@ -6,8 +6,6 @@ import os
 from geopy.geocoders import Nominatim
 import database_functions
 import datetime
-import tkinter as tk
-from PIL import Image, ImageTk
 
 def get_day_of_week():
     current_date = datetime.date.today()
@@ -45,20 +43,7 @@ def get_current_period():
 #     location = geolocator.reverse((latitude, longitude))
 #     return location
 
-# Set up GUI
-window = tk.Tk()  # Makes main window
-window.wm_title("Digital Microscope")
-window.config(background="#FFFFFF")
-
-# Graphics window
-imageFrame = tk.Frame(window, width=600, height=500)
-imageFrame.grid(row=0, column=0, padx=10, pady=2)
-
-# Capture video frames
-lmain = tk.Label(imageFrame)
-lmain.grid(row=0, column=0)
-
-cap = cv2.VideoCapture(0)
+video_capture = cv2.VideoCapture(0)
 
 student_ids = database_functions.get_all_students_ids()
 student_names = database_functions.get_all_students_names()
@@ -85,47 +70,48 @@ face_names = []
 process_this_frame = True
 
 # Live face capture using device camera
-
-def show_frame():
-    global process_this_frame  
+while True:
     # Grab a single frame of video
-    ret, frame = cap.read()
-    frame = cv2.flip(frame, 1)
-    cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
+    ret, frame = video_capture.read()
 
-    # Resize frame of video to 1/4 size for faster face recognition processing
-    small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
+    # Only process every other frame of video to save time
+    if process_this_frame:
+        # Resize frame of video to 1/4 size for faster face recognition processing
+        small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
 
-    # Convert the image from BGR color (which OpenCV uses) to RGB color (which face_recognition uses)
-    #rgb_small_frame = np.ascontiguousarray(small_frame[:, :, ::-1])
-    rgb_small_frame = cv2.cvtColor(small_frame, cv2.COLOR_BGR2RGB)
+        # Convert the image from BGR color (which OpenCV uses) to RGB color (which face_recognition uses)
+        #rgb_small_frame = np.ascontiguousarray(small_frame[:, :, ::-1])
+        rgb_small_frame = cv2.cvtColor(small_frame, cv2.COLOR_BGR2RGB)
 
-    # Find all the faces and face encodings in the current frame of video
-    face_locations = face_recognition.face_locations(rgb_small_frame)
-    face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
+        # Find all the faces and face encodings in the current frame of video
+        face_locations = face_recognition.face_locations(rgb_small_frame)
+        face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
 
-    face_names = []
-    course_data = []
-    course_name = 'No course found'
-    for face_encoding in face_encodings:
-        # See if the face is a match for the known face(s)
-        matches = face_recognition.compare_faces(student_image_encodings, face_encoding)
-        name = "Unknown"
-        student_id = ''
+        face_names = []
+        course_data = []
+        course_name = 'No course found'
+        for face_encoding in face_encodings:
+            # See if the face is a match for the known face(s)
+            matches = face_recognition.compare_faces(student_image_encodings, face_encoding)
+            name = "Unknown"
+            student_id = ''
 
-        # Use the known face with the smallest distance to the new face
-        face_distances = face_recognition.face_distance(student_image_encodings, face_encoding)
-        best_match_index = np.argmin(face_distances)
-        if matches[best_match_index]:
-            name = student_names[best_match_index]
-            student_id = student_ids[best_match_index]
+            # Use the known face with the smallest distance to the new face
+            face_distances = face_recognition.face_distance(student_image_encodings, face_encoding)
+            best_match_index = np.argmin(face_distances)
+            if matches[best_match_index]:
+                name = student_names[best_match_index]
+                student_id = student_ids[best_match_index]
 
-            # Get the course the student is supposed to study at this time 
-            course_data = database_functions.get_student_course_by_schedule(student_id=student_id, day_of_week=get_day_of_week(), periods=get_current_period())
-            if course_data != None:
-                course_name = course_data[1]
-                
-        face_names.append(name)
+                # Get the course the student is supposed to study at this time 
+                course_data = database_functions.get_student_course_by_schedule(student_id=student_id, day_of_week=get_day_of_week(), periods=get_current_period())
+                if course_data != None:
+                    course_name = course_data[1]
+                    
+            face_names.append(name)
+
+    process_this_frame = not process_this_frame
+
 
     # Display the results
     for (top, right, bottom, left), name in zip(face_locations, face_names):
@@ -157,29 +143,13 @@ def show_frame():
         cv2.putText(frame, "Course: " + course_name, (left + 6, bottom + 30), font, 1.0, (255, 255, 255), 1)
         cv2.putText(frame, "Status: " + text, (left + 6, bottom + 60), font, 1.0, (255, 255, 255), 1)
 
-    cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)  # Convert frame back to RGBA format
-    img = Image.fromarray(cv2image)
-    imgtk = ImageTk.PhotoImage(image=img)
-    lmain.imgtk = imgtk
-    lmain.configure(image=imgtk)
+    # Display the resulting image
+    cv2.imshow('Attendance app', frame)        
 
-    lmain.after(10, show_frame)
-
-# Button function to be executed when the button is pressed
-def button_pressed():
-    print("Button pressed!")
-
-# Button widget
-button = tk.Button(window, text="Press Me", command=button_pressed)
-button.grid(row=1, column=0, pady=10)
-
-# Slider window (slider controls stage position)
-# sliderFrame = tk.Frame(window, width=600, height=100)
-# sliderFrame.grid(row=2, column=0, padx=10, pady=2)
-
-show_frame()  # Display video frames
-window.mainloop()  # Starts GUI
+    # Hit 'q' on the keyboard to quit!
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
 
 # Release handle to the webcam
-cap.release()
+video_capture.release()
 cv2.destroyAllWindows()
