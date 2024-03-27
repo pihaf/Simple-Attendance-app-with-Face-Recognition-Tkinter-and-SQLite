@@ -124,10 +124,10 @@ def show_frame():
 
             # Get the course the student is supposed to study at this time 
             course_data = database_functions.get_student_course_by_schedule(student_id=student_id, day_of_week=get_day_of_week(), periods=get_current_period())
-            print("Student ID: ", student_id)
-            print("Day of week: ", get_day_of_week())
-            print("Periods: ", get_current_period())
-            print("Course retrieved: ", course_data)
+            # print("Student ID: ", student_id)
+            # print("Day of week: ", get_day_of_week())
+            # print("Periods: ", get_current_period())
+            # print("Course retrieved: ", course_data)
             if course_data != None:
                 course_name = course_data[1]
                 

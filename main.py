@@ -1,5 +1,9 @@
 import tkinter as tk
 
+logged_in = False
+username = ""
+password = ""
+
 def take_attendance():
     # Code for the "Take Attendance" functionality
     print("Taking attendance...")
@@ -19,24 +23,87 @@ def show_menu():
     menu_frame.pack()
     attendance_frame.pack_forget()
     account_frame.pack_forget()
+    login_frame.pack_forget()
+    register_frame.pack_forget()
     about_frame.pack_forget()
 
 def show_attendance():
     menu_frame.pack_forget()
     attendance_frame.pack()
     account_frame.pack_forget()
+    login_frame.pack_forget()
+    register_frame.pack_forget()
     about_frame.pack_forget()
+
+def login():
+    global logged_in
+    global username
+    global password
+    # Code for the login functionality
+    print("Login")
+    username = username_entry.get()
+    password = password_entry.get()
+    # Add your login logic here
+    if username == "admin" and password == "password":
+        logged_in = True
+        account_button.pack_forget()  
+        show_menu()
+
+def register():
+    global logged_in
+    global username
+    global password
+    # Code for the register functionality
+    print("Register")
+    username = username_entry.get()
+    password = password_entry.get()
+    # Add your register logic here
+    logged_in = True
+    account_button.pack_forget()  # Hide the login button when logged in
+    show_menu()
+
+def logout():
+    global logged_in
+    global username
+    global password
+    # Code for the logout functionality
+    print("Logout")
+    logged_in = False
+    username = ""
+    password = ""
+    account_button.pack()  # Show the login button when logged out
+    show_menu()  # Go back to the main menu after logout
 
 def show_account_scene():
     menu_frame.pack_forget()
     attendance_frame.pack_forget()
     account_frame.pack()
+    login_frame.pack_forget()
+    register_frame.pack_forget()
     about_frame.pack_forget()
+
+def show_login_scene():
+    menu_frame.pack_forget()
+    attendance_frame.pack_forget()
+    account_frame.pack_forget()
+    login_frame.pack()
+    register_frame.pack_forget()
+    about_frame.pack_forget()
+
+def show_register_scene():
+    menu_frame.pack_forget()
+    attendance_frame.pack_forget()
+    account_frame.pack_forget()
+    login_frame.pack_forget()
+    register_frame.pack()
+    about_frame.pack_forget()    
 
 def show_about_scene():
     menu_frame.pack_forget()
     attendance_frame.pack_forget()
     account_frame.pack_forget()
+    login_frame.pack_forget()
+    register_frame.pack_forget()
     about_frame.pack()
 
 root = tk.Tk()
@@ -107,7 +174,61 @@ account_label.pack(pady=10)
 back_button_account = tk.Button(account_frame, text="Back", command=show_menu)
 back_button_account.pack(pady=10)
 
+login_button = tk.Button(account_frame, text="Login", command=show_login_scene)
+login_button.pack(pady=10)
+
+register_button = tk.Button(account_frame, text="Register", command=show_register_scene)
+register_button.pack(pady=10)
+
 account_frame.pack(padx=20, pady=20)
+
+# Login frame
+login_frame = tk.Frame(root)
+
+login_label = tk.Label(login_frame, text="Login Scene", font=("Arial", 16))
+login_label.pack(pady=10)
+
+back_button_account = tk.Button(login_frame, text="Back", command=show_menu)
+back_button_account.pack(pady=10)
+
+username_label = tk.Label(login_frame, text="Username:")
+username_label.pack(pady=5)
+username_entry = tk.Entry(login_frame)
+username_entry.pack(pady=5)
+
+password_label = tk.Label(login_frame, text="Password:")
+password_label.pack(pady=5)
+password_entry = tk.Entry(login_frame, show="*")
+password_entry.pack(pady=5)
+
+login_button = tk.Button(login_frame, text="Login", command=login)
+login_button.pack(pady=10)
+
+login_frame.pack(padx=20, pady=20)
+
+# Register frame
+register_frame = tk.Frame(root)
+
+register_label = tk.Label(register_frame, text="Login Scene", font=("Arial", 16))
+register_label.pack(pady=10)
+
+back_button_account = tk.Button(register_frame, text="Back", command=show_menu)
+back_button_account.pack(pady=10)
+
+username_label = tk.Label(register_frame, text="Username:")
+username_label.pack(pady=5)
+username_entry = tk.Entry(register_frame)
+username_entry.pack(pady=5)
+
+password_label = tk.Label(register_frame, text="Password:")
+password_label.pack(pady=5)
+password_entry = tk.Entry(register_frame, show="*")
+password_entry.pack(pady=5)
+
+register_button = tk.Button(register_frame, text="Create account", command=register)
+register_button.pack(pady=10)
+
+register_frame.pack(padx=20, pady=20)
 
 # Create the about frame
 about_frame = tk.Frame(root)
