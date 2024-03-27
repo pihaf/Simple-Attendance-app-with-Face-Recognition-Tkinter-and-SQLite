@@ -124,6 +124,10 @@ def show_frame():
 
             # Get the course the student is supposed to study at this time 
             course_data = database_functions.get_student_course_by_schedule(student_id=student_id, day_of_week=get_day_of_week(), periods=get_current_period())
+            print("Student ID: ", student_id)
+            print("Day of week: ", get_day_of_week())
+            print("Periods: ", get_current_period())
+            print("Course retrieved: ", course_data)
             if course_data != None:
                 course_name = course_data[1]
                 
@@ -174,7 +178,7 @@ def button_pressed():
     print(result)
 
 # Button widget
-button = tk.Button(window, text="Press Me", command=button_pressed)
+button = tk.Button(window, text="Take attendance", command=button_pressed)
 button.grid(row=1, column=0, pady=10)
 
 # Slider window (slider controls stage position)

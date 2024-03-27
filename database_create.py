@@ -95,7 +95,37 @@ def load_sample_data():
         ('INT2020E 20', 'Design information system','Monday', '9-10', 'Đại học Quốc gia Hà Nội'),
         ('INT3306E 20', 'Web development','Monday', '11-12', 'Đại học Quốc gia Hà Nội'),
         ('PES1015', 'Basketball', 'Tuesday', '3-4', 'Đại học Quốc gia Hà Nội'),
-        ('PES1016', 'Football', 'Wednesday', '5-6', 'Đại học Quốc gia Hà Nội')
+        ('PES1016', 'Football', 'Wednesday', '5-6', 'Đại học Quốc gia Hà Nội'),
+        ('TEST2024', 'Test course', 'Monday', '1-2', 'Đại học Quốc gia Hà Nội'),
+        ('TEST2024', 'Test course', 'Monday', '3-4', 'Đại học Quốc gia Hà Nội'),
+        ('TEST2024', 'Test course', 'Monday', '5-6', 'Đại học Quốc gia Hà Nội'),
+        ('TEST2024', 'Test course', 'Monday', '7-8', 'Đại học Quốc gia Hà Nội'),
+        ('TEST2024', 'Test course', 'Monday', '9-10', 'Đại học Quốc gia Hà Nội'),
+        ('TEST2024', 'Test course', 'Monday', '11-12', 'Đại học Quốc gia Hà Nội'),
+        ('TEST2025', 'Test course', 'Tuesday', '1-2', 'Đại học Quốc gia Hà Nội'),
+        ('TEST2025', 'Test course', 'Tuesday', '3-4', 'Đại học Quốc gia Hà Nội'),
+        ('TEST2025', 'Test course', 'Tuesday', '5-6', 'Đại học Quốc gia Hà Nội'),
+        ('TEST2025', 'Test course', 'Tuesday', '7-8', 'Đại học Quốc gia Hà Nội'),
+        ('TEST2025', 'Test course', 'Tuesday', '9-10', 'Đại học Quốc gia Hà Nội'),
+        ('TEST2025', 'Test course', 'Tuesday', '11-12', 'Đại học Quốc gia Hà Nội'),
+        ('TEST2026', 'Test course', 'Wednesday', '1-2', 'Đại học Quốc gia Hà Nội'),
+        ('TEST2026', 'Test course', 'Wednesday', '3-4', 'Đại học Quốc gia Hà Nội'),
+        ('TEST2026', 'Test course', 'Wednesday', '5-6', 'Đại học Quốc gia Hà Nội'),
+        ('TEST2026', 'Test course', 'Wednesday', '7-8', 'Đại học Quốc gia Hà Nội'),
+        ('TEST2026', 'Test course', 'Wednesday', '9-10', 'Đại học Quốc gia Hà Nội'),
+        ('TEST2026', 'Test course', 'Wednesday', '11-12', 'Đại học Quốc gia Hà Nội'),
+                ('TEST2027', 'Test course', 'Thursday', '1-2', 'Đại học Quốc gia Hà Nội'),
+        ('TEST2027', 'Test course', 'Thursday', '3-4', 'Đại học Quốc gia Hà Nội'),
+        ('TEST2027', 'Test course', 'Thursday', '5-6', 'Đại học Quốc gia Hà Nội'),
+        ('TEST2027', 'Test course', 'Thursday', '7-8', 'Đại học Quốc gia Hà Nội'),
+        ('TEST2027', 'Test course', 'Thursday', '9-10', 'Đại học Quốc gia Hà Nội'),
+        ('TEST2027', 'Test course', 'Thursday', '11-12', 'Đại học Quốc gia Hà Nội'),
+                ('TEST2028', 'Test course', 'Friday', '1-2', 'Đại học Quốc gia Hà Nội'),
+        ('TEST2028', 'Test course', 'Friday', '3-4', 'Đại học Quốc gia Hà Nội'),
+        ('TEST2028', 'Test course', 'Friday', '5-6', 'Đại học Quốc gia Hà Nội'),
+        ('TEST2028', 'Test course', 'Friday', '7-8', 'Đại học Quốc gia Hà Nội'),
+        ('TEST2028', 'Test course', 'Friday', '9-10', 'Đại học Quốc gia Hà Nội'),
+        ('TEST2028', 'Test course', 'Friday', '11-12', 'Đại học Quốc gia Hà Nội'),
     ]
 
     for data in course_data:
@@ -144,12 +174,11 @@ def load_sample_data():
     # Insert sample student course data
     student_course_data = [
         ('S001', 'INT2214 23'),  
-        ('S002', 'INT2214 23'),  
-        ('S002','INT3235E 20'),
-        ('S002','INT3229E 20'),
-        ('S002','INT3225E 20'),
-        ('S002','INT2020E 20'),
-        ('S002','INT3306E 20'),
+        ('S002', 'TEST2024'),
+        ('S002', 'TEST2025'),
+        ('S002', 'TEST2026'),
+        ('S002', 'TEST2027'),
+        ('S002', 'TEST2028'),
         ('S003', 'INT2214 23')   
     ]
 

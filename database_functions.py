@@ -50,7 +50,7 @@ def get_all_courses_data():
 def get_courses_of_student(student_id):
     conn = sqlite3.connect('attendance.db')
     cursor = conn.cursor()
-    cursor.execute('SELECT courses.* FROM courses JOIN student_courses ON courses.id = student_courses.course_id WHERE student_courses.student_id = ?', (student_id,))
+    cursor.execute('SELECT courses.* FROM courses JOIN student_courses ON courses.course_id = student_courses.course_id WHERE student_courses.student_id = ?', (student_id,))
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -61,7 +61,7 @@ def get_student_course_by_schedule(student_id, day_of_week, periods):
     conn = sqlite3.connect('attendance.db')
     cursor = conn.cursor()
     cursor.execute('''SELECT courses.* FROM courses
-                      JOIN student_courses ON courses.id = student_courses.course_id
+                      JOIN student_courses ON courses.course_id = student_courses.course_id
                       WHERE student_courses.student_id = ?
                       AND courses.day_of_week = ? AND courses.periods = ? ''',
                    (student_id, day_of_week, periods))
@@ -75,6 +75,7 @@ def create_attendance_record(student_id, day_of_week, periods):
     conn = sqlite3.connect('attendance.db')
     cursor = conn.cursor()
     course = get_student_course_by_schedule(student_id, day_of_week, periods)
+    print(course)
     if course:
         current_date = datetime.datetime.now().date()
         
@@ -125,4 +126,4 @@ def print_table_data(table_name):
     cursor.close()
     conn.close()
 
-print_table_data("student_courses")
+#print_table_data("courses")
