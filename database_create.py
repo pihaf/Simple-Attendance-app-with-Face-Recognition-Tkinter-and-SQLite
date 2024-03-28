@@ -224,5 +224,3 @@ create_tables()
 
 # Load sample data
 load_sample_data()
-
-# print_table_data('courses')

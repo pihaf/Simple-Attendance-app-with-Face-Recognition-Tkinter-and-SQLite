@@ -81,7 +81,7 @@ def create_attendance_record(student_id, day_of_week, periods):
         
         # Check if an attendance record already exists for the student, course, and current date
         cursor.execute('SELECT * FROM attendance WHERE student_id = ? AND course_id = ? AND DATE(timestamp) = ?',
-                       (student_id, course[0], current_date))
+                       (student_id, course[1], current_date))
         existing_record = cursor.fetchone()
         
         if existing_record:
@@ -91,11 +91,11 @@ def create_attendance_record(student_id, day_of_week, periods):
         
         timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         cursor.execute('INSERT INTO attendance (student_id, course_id, timestamp, status) VALUES (?, ?, ?, ?)',
-                       (student_id, course[0], timestamp, 'Marked'))
+                       (student_id, course[1], timestamp, 'Marked'))
         conn.commit()
         cursor.close()
         conn.close()
-        return "Marked course {}!".format(course[0])
+        return "Marked course {}!".format(course[1])
     else:
         cursor.close()
         conn.close()
@@ -126,4 +126,4 @@ def print_table_data(table_name):
     cursor.close()
     conn.close()
 
-#print_table_data("courses")
+#print_table_data('attendance')
