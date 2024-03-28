@@ -45,49 +45,9 @@ def get_current_period():
 #     location = geolocator.reverse((latitude, longitude))
 #     return location
 
-# Set up GUI
-window = tk.Tk()  # Makes main window
-window.wm_title("Digital Microscope")
-window.config(background="#FFFFFF")
-
-# Graphics window
-imageFrame = tk.Frame(window, width=600, height=500)
-imageFrame.grid(row=0, column=0, padx=10, pady=2)
-
-# Capture video frames
-lmain = tk.Label(imageFrame)
-lmain.grid(row=0, column=0)
-
-cap = cv2.VideoCapture(0)
-
-student_ids = database_functions.get_all_students_ids()
-student_names = database_functions.get_all_students_names()
-student_images = database_functions.get_all_students_images()
-status = ['Unmark', 'Marked', 'Unmark']
-student_image_encodings = []
-
-for row in student_images:
-    image_bytes = row[0]
-    # Convert the image bytes to a numpy array
-    image_array = np.frombuffer(image_bytes, np.uint8)
-    # Decode the image array
-    image = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
-    # Convert the image from BGR to RGB (face_recognition uses RGB format)
-    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    # Encode the face in the image
-    face_encoding = face_recognition.face_encodings(image_rgb)[0]
-    student_image_encodings.append(face_encoding)
-
-# Initialize some variables
-face_locations = []
-face_encodings = []
-face_names = []
-process_this_frame = True
-student_id_found = ''
 
 # Live face capture using device camera
 def show_frame():
-    global process_this_frame  
     global student_id_found
     # Grab a single frame of video
     ret, frame = cap.read()
@@ -143,10 +103,10 @@ def show_frame():
 
         # Check status
         if name != 'Unknown':
-            if status[best_match_index] == 'Unmark':
+            if student_status[best_match_index] == 'Unmark':
                 color = (0, 0, 255)
                 text = 'Unmark'
-            elif status[best_match_index] == 'Marked':
+            elif student_status[best_match_index] == 'Marked':
                 color = (0,128,0)
                 text = 'Marked'
         else:
@@ -167,19 +127,54 @@ def show_frame():
     cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)  # Convert frame back to RGBA format
     img = Image.fromarray(cv2image)
     imgtk = ImageTk.PhotoImage(image=img)
-    lmain.imgtk = imgtk
-    lmain.configure(image=imgtk)
+    attendance_label.imgtk = imgtk
+    attendance_label.configure(image=imgtk)
 
-    lmain.after(10, show_frame)
+    attendance_label.after(10, show_frame)
 
 # Button function to be executed when the button is pressed
 def button_pressed():
     result = database_functions.create_attendance_record(student_id_found, get_day_of_week(), get_current_period())
     print(result)
 
+# Set up GUI
+window = tk.Tk()  # Makes main window
+window.wm_title("Digital Microscope")
+window.config(background="#FFFFFF")
+
+# Graphics window
+attendance_frame = tk.Frame(window)
+attendance_frame.pack()
+
+# Capture video frames
+attendance_label = tk.Label(attendance_frame)
+attendance_label.pack()
+
+cap = cv2.VideoCapture(0)
+
+student_ids = database_functions.get_all_students_ids()
+student_names = database_functions.get_all_students_names()
+student_images = database_functions.get_all_students_images()
+student_status = ['Unmark', 'Marked', 'Unmark']
+student_image_encodings = []
+
+for row in student_images:
+    image_bytes = row[0]
+    # Convert the image bytes to a numpy array
+    image_array = np.frombuffer(image_bytes, np.uint8)
+    # Decode the image array
+    image = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
+    # Convert the image from BGR to RGB (face_recognition uses RGB format)
+    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    # Encode the face in the image
+    face_encoding = face_recognition.face_encodings(image_rgb)[0]
+    student_image_encodings.append(face_encoding)
+
+student_id_found = ''
+
 # Button widget
-button = tk.Button(window, text="Take attendance", command=button_pressed)
-button.grid(row=1, column=0, pady=10)
+button = tk.Button(attendance_frame, text="Take attendance", command=button_pressed)
+button.pack(pady=10)
 
 # Slider window (slider controls stage position)
 # sliderFrame = tk.Frame(window, width=600, height=100)

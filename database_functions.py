@@ -61,7 +61,7 @@ def get_student_course_by_schedule(student_id, day_of_week, periods):
     conn = sqlite3.connect('attendance.db')
     cursor = conn.cursor()
     cursor.execute('''SELECT courses.* FROM courses
-                      JOIN student_courses ON courses.course_id = student_courses.course_id
+                      JOIN student_courses ON courses.id = student_courses.course_id
                       WHERE student_courses.student_id = ?
                       AND courses.day_of_week = ? AND courses.periods = ? ''',
                    (student_id, day_of_week, periods))
@@ -81,7 +81,7 @@ def create_attendance_record(student_id, day_of_week, periods):
         
         # Check if an attendance record already exists for the student, course, and current date
         cursor.execute('SELECT * FROM attendance WHERE student_id = ? AND course_id = ? AND DATE(timestamp) = ?',
-                       (student_id, course[1], current_date))
+                       (student_id, course[0], current_date))
         existing_record = cursor.fetchone()
         
         if existing_record:
@@ -91,7 +91,7 @@ def create_attendance_record(student_id, day_of_week, periods):
         
         timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         cursor.execute('INSERT INTO attendance (student_id, course_id, timestamp, status) VALUES (?, ?, ?, ?)',
-                       (student_id, course[1], timestamp, 'Marked'))
+                       (student_id, course[0], timestamp, 'Marked'))
         conn.commit()
         cursor.close()
         conn.close()

@@ -19,7 +19,7 @@ def create_tables():
     # Create the course table
     cursor.execute('''CREATE TABLE IF NOT EXISTS courses
                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    course_id TEXT,
+                    course_code TEXT,
                     course_name TEXT,
                     day_of_week TEXT,
                     periods TEXT,
@@ -129,23 +129,23 @@ def load_sample_data():
     ]
 
     for data in course_data:
-        course_id, course_name, day_of_week, periods, location = data
-        cursor.execute('INSERT INTO courses (course_id, course_name, day_of_week, periods, location) VALUES (?, ?, ?, ?, ?)',
-                       (course_id, course_name, day_of_week, periods, location))
+        course_code, course_name, day_of_week, periods, location = data
+        cursor.execute('INSERT INTO courses (course_code, course_name, day_of_week, periods, location) VALUES (?, ?, ?, ?, ?)',
+                       (course_code, course_name, day_of_week, periods, location))
 
     days = ['Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
     periods = ['1-2', '3-4', '5-6', '7-8', '9-10', '11-12']
     course_names = ['Database management', 'Data mining', 'Artificial intelligence', 'Software engineering', 'Computer networks']
-    course_ids = ['INT4321E 20', 'INT5432E 20', 'INT6543E 20', 'INT7654E 20', 'INT8765E 20']
+    course_codes = ['INT4321E 20', 'INT5432E 20', 'INT6543E 20', 'INT7654E 20', 'INT8765E 20']
 
     for day in days:
         for period in periods:
             for i in range(len(course_names)):
-                course_id = course_ids[i]
+                course_code = course_codes[i]
                 course_name = course_names[i]
                 location = 'Đại học Quốc gia Hà Nội'
-                cursor.execute('INSERT INTO courses (course_id, course_name, day_of_week, periods, location) VALUES (?, ?, ?, ?, ?)',
-                            (course_id, course_name, day, period, location))
+                cursor.execute('INSERT INTO courses (course_code, course_name, day_of_week, periods, location) VALUES (?, ?, ?, ?, ?)',
+                            (course_code, course_name, day, period, location))
 
     # Insert sample student account data
     student_account_data = [
@@ -173,13 +173,38 @@ def load_sample_data():
 
     # Insert sample student course data
     student_course_data = [
-        ('S001', 'INT2214 23'),  
-        ('S002', 'TEST2024'),
-        ('S002', 'TEST2025'),
-        ('S002', 'TEST2026'),
-        ('S002', 'TEST2027'),
-        ('S002', 'TEST2028'),
-        ('S003', 'INT2214 23')   
+        ('S001', '1'),  
+        ('S002', '9'),
+        ('S002', '10'),
+        ('S002', '11'),
+        ('S002', '12'),
+        ('S002', '13'),
+        ('S002', '14'),
+        ('S002', '15'),
+        ('S002', '16'),
+        ('S002', '17'),
+        ('S002', '18'),
+        ('S002', '19'),
+        ('S002', '20'),
+        ('S002', '21'),
+        ('S002', '22'),
+        ('S002', '23'),
+        ('S002', '24'),
+        ('S002', '25'),
+        ('S002', '26'),
+        ('S002', '27'),
+        ('S002', '28'),
+        ('S002', '29'),
+        ('S002', '30'),
+        ('S002', '31'),
+        ('S002', '32'),
+        ('S002', '33'),
+        ('S002', '34'),
+        ('S002', '35'),
+        ('S002', '36'),
+        ('S002', '37'),
+        ('S002', '38'),
+        ('S003', '1')   
     ]
 
     for data in student_course_data:
