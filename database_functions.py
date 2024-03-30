@@ -101,7 +101,7 @@ def create_attendance_record(student_id, day_of_week, periods):
         conn.close()
         return "No course found."
     
-def create_student_account(student_id, name, date_of_birth, class_name, username, password):
+def create_student_account(student_id, name, date_of_birth, class_name, image_path, username, password):
     conn = sqlite3.connect('attendance.db')
     cursor = conn.cursor()
     try:
@@ -110,15 +110,18 @@ def create_student_account(student_id, name, date_of_birth, class_name, username
                        (student_id, username, password))
         conn.commit()
 
+        with open(image_path, 'rb') as f:
+            image_data = f.read()
         # Insert the student data into the students table
-        cursor.execute('INSERT INTO students (student_id, name, date_of_birth, class) VALUES (?, ?, ?, ?)',
-                       (student_id, name, date_of_birth, class_name))
+        cursor.execute('INSERT INTO students (student_id, name, date_of_birth, class, image) VALUES (?, ?, ?, ?, ?)',
+                       (student_id, name, date_of_birth, class_name, image_data))
         conn.commit()
 
         print("Student account created successfully.")
     except sqlite3.IntegrityError:
         print("Error: Student ID already exists.")
-
+    except Exception as e:
+        print("Error in student account creation: ", str(e))
 
 def create_admin_account(username, password):
     conn = sqlite3.connect('attendance.db')
@@ -157,4 +160,4 @@ def print_table_data(table_name):
     cursor.close()
     conn.close()
 
-#print_table_data('attendance')
+#print_table_data('student_accounts')

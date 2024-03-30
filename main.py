@@ -8,6 +8,8 @@ import face_recognition
 from PIL import Image, ImageTk
 import database_functions
 import datetime
+import os
+import shutil
 
 def get_day_of_week():
     current_date = datetime.date.today()
@@ -60,6 +62,7 @@ student_id_found = ''
 logged_in = False
 username = ""
 password = ""
+new_account_face_encoding = None
 
 def start_capture():
     global cap
@@ -212,17 +215,30 @@ def login():
         show_menu()
 
 def register():
+    global new_account_face_encoding
+    global image_name
+    global image_path
     global logged_in
     global username
     global password
-    # Code for the register functionality
-    print("Register")
+
     username = username_entry.get()
     password = password_entry.get()
-    # Add your register logic here
-    logged_in = True
-    account_button.pack_forget()  # Hide the login button when logged in
-    show_menu()
+    student_id = student_id_entry.get()
+    name = name_entry.get()
+    dob = date_of_birth_entry.get()
+    student_class = class_entry.get()
+    destination_path = os.path.join("images", image_name)  # Destination path in the "images" directory
+    shutil.copy2(image_path, destination_path)  # Copy the file to the destination path
+    path = 'images/' + image_name
+    try:
+        database_functions.create_student_account(student_id, name, dob, student_class, path, username, password)
+        student_image_encodings.append(new_account_face_encoding)
+        logged_in = True
+        account_button.pack_forget()  # Hide the login button when logged in
+        show_menu()
+    except Exception as e:
+        print("Error:", str(e))
 
 def logout():
     global logged_in
@@ -261,28 +277,43 @@ def show_register_scene():
     about_frame.pack_forget()    
 
 def browse_image():
+    global image_path
+    global image_name
     file_path = filedialog.askopenfilename(filetypes=[("Image Files", "*.png;*.jpg;*.jpeg")])
     if file_path:
+        # print(file_path)
+        file_name = os.path.basename(file_path)
+        image_name = file_name
+        image_path = file_path
+        # print("Selected file name:", file_name)
+        image_name_label.config(text=file_name)
         global image_object  # Store the image object as a global variable
         image_object = Image.open(file_path)
-        image_object = image_object.resize((200, 200))
-        photo = ImageTk.PhotoImage(image_object)
+        # image_object = image_object.resize((200, 300))
+        photo = ImageTk.PhotoImage(image_object.resize((200, 200)))
         image_label.config(image=photo)
         image_label.image = photo
         register_button.config(state=tk.DISABLED)# Disable register button when a new image is selected
+        # destination_path = os.path.join("images", file_name)  # Destination path in the "images" directory
+        # shutil.copy2(file_path, destination_path)  # Copy the file to the destination path
+
+        # print(f"Selected file '{file_name}' copied to '{destination_path}'")
     else:
             print("No file is chosen. Please choose a file.")
 
 def check_image():
+    global new_account_face_encoding
     try: 
         image_array = np.array(image_object)  
         new_face_location = face_recognition.face_locations(image_array)
         if len(new_face_location) > 1:
             print("Too many faces detected. Please try a different image.")
             register_button.config(state=tk.DISABLED)  
-        else:
+        elif len(new_face_location) == 1:
+            print("Detected 1 face.")
             try: 
                 new_face_encoding = face_recognition.face_encodings(image_array)[0]
+                new_account_face_encoding = new_face_encoding
                 # See if the face is a match for the known face(s)
                 matches = face_recognition.compare_faces(student_image_encodings, new_face_encoding)
 
@@ -293,10 +324,15 @@ def check_image():
                     print("Face already existed in the database. Please try a different image.")
                     register_button.config(state=tk.DISABLED)  
                 else:
+                    print("Image accepted.")
                     register_button.config(state=tk.NORMAL) 
-            except:
-                print("Image doesn't contain any faces. Please try a different image.")
-    except:
+            except Exception as e:
+                print("Error:", str(e))
+                print("Please try again or try a different image.")
+        else:
+            print("Image doesn't contain any faces. Please try a different image.")
+    except Exception as e:
+        print("Error:", str(e))
         print("No images selected to be checked.")
         
 def show_about_scene():
@@ -475,6 +511,8 @@ button_frame.pack(pady=10)
 upload_image_label = tk.Label(button_frame, text="Photo:")
 upload_image_label.grid(row=0, column=0, pady=5, sticky="w")
 
+image_name = ''
+image_path = ''
 # Create a button to browse and upload an image
 browse_button = tk.Button(button_frame, text="Browse", command=browse_image)
 browse_button.grid(row=0, column=1, pady=5, padx=10, sticky="w")
@@ -485,6 +523,9 @@ check_image_button.grid(row=0, column=2, pady=5, padx=10, sticky="w")
 # Create a label to display the uploaded image
 image_label = tk.Label(second_frame)
 image_label.pack(pady=10)
+
+image_name_label = tk.Label(second_frame)
+image_name_label.pack()
 
 register_button = tk.Button(second_frame, text="Create account", command=register)
 register_button.pack(pady=10)
