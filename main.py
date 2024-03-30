@@ -1,5 +1,8 @@
 import tkinter as tk
+from tkinter import filedialog
+from tkinter import ttk
 import cv2
+import sqlite3
 import numpy as np
 import face_recognition
 from PIL import Image, ImageTk
@@ -32,6 +35,9 @@ def get_current_period():
     else:
         return 'No matching period found.'
 
+def on_mousewheel(event):
+    canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
 student_ids = database_functions.get_all_students_ids()
 student_names = database_functions.get_all_students_names()
 student_images = database_functions.get_all_students_images()
@@ -58,6 +64,8 @@ password = ""
 def start_capture():
     global cap
     cap = cv2.VideoCapture(0)
+    # cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280) 
+    # cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
 def stop_capture():
     if 'cap' in globals():
@@ -252,6 +260,45 @@ def show_register_scene():
     register_frame.pack()
     about_frame.pack_forget()    
 
+def browse_image():
+    file_path = filedialog.askopenfilename(filetypes=[("Image Files", "*.png;*.jpg;*.jpeg")])
+    if file_path:
+        global image_object  # Store the image object as a global variable
+        image_object = Image.open(file_path)
+        image_object = image_object.resize((200, 200))
+        photo = ImageTk.PhotoImage(image_object)
+        image_label.config(image=photo)
+        image_label.image = photo
+        register_button.config(state=tk.DISABLED)# Disable register button when a new image is selected
+    else:
+            print("No file is chosen. Please choose a file.")
+
+def check_image():
+    try: 
+        image_array = np.array(image_object)  
+        new_face_location = face_recognition.face_locations(image_array)
+        if len(new_face_location) > 1:
+            print("Too many faces detected. Please try a different image.")
+            register_button.config(state=tk.DISABLED)  
+        else:
+            try: 
+                new_face_encoding = face_recognition.face_encodings(image_array)[0]
+                # See if the face is a match for the known face(s)
+                matches = face_recognition.compare_faces(student_image_encodings, new_face_encoding)
+
+                # Use the known face with the smallest distance to the new face
+                face_distances = face_recognition.face_distance(student_image_encodings, new_face_encoding)
+                best_match_index = np.argmin(face_distances)
+                if matches[best_match_index]:
+                    print("Face already existed in the database. Please try a different image.")
+                    register_button.config(state=tk.DISABLED)  
+                else:
+                    register_button.config(state=tk.NORMAL) 
+            except:
+                print("Image doesn't contain any faces. Please try a different image.")
+    except:
+        print("No images selected to be checked.")
+        
 def show_about_scene():
     menu_frame.pack_forget()
     attendance_frame.pack_forget()
@@ -264,8 +311,8 @@ root = tk.Tk()
 root.title("Attendance App")
 
 # Configure window size and position
-window_width = 600
-window_height = 400
+window_width = 1000
+window_height = 600
 
 screen_width = root.winfo_screenwidth()
 screen_height = root.winfo_screenheight()
@@ -328,14 +375,17 @@ account_frame = tk.Frame(root)
 account_label = tk.Label(account_frame, text="Account Scene", font=("Arial", 16))
 account_label.pack(pady=10)
 
+new_frame = tk.Frame(account_frame)
+new_frame.pack(pady=10)
+
+login_button = tk.Button(new_frame, text="Login", command=show_login_scene)
+login_button.grid(row=0, column=1, pady=5, padx=10, sticky="w")
+
+register_button = tk.Button(new_frame, text="Register", command=show_register_scene)
+register_button.grid(row=0, column=2, pady=5, padx=10, sticky="w")
+
 back_button_account = tk.Button(account_frame, text="Back", command=show_menu)
 back_button_account.pack(pady=10)
-
-login_button = tk.Button(account_frame, text="Login", command=show_login_scene)
-login_button.pack(pady=10)
-
-register_button = tk.Button(account_frame, text="Register", command=show_register_scene)
-register_button.pack(pady=10)
 
 account_frame.pack(padx=20, pady=20)
 
@@ -365,27 +415,84 @@ login_frame.pack(padx=20, pady=20)
 
 # Register frame
 register_frame = tk.Frame(root)
+register_frame.pack(fill=tk.BOTH, expand=1)
 
-register_label = tk.Label(register_frame, text="Login Scene", font=("Arial", 16))
+# Create a canvas with a scrollbar
+canvas = tk.Canvas(register_frame)
+canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+scrollbar = ttk.Scrollbar(register_frame, orient=tk.VERTICAL, command=canvas.yview)
+scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+canvas.configure(yscrollcommand=scrollbar.set)
+canvas.bind("<MouseWheel>", on_mousewheel)
+canvas.bind(
+    '<Configure>', lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+)
+
+# Create a frame inside the canvas
+second_frame = tk.Frame(canvas)
+
+register_label = tk.Label(second_frame, text="Login Scene", font=("Arial", 16))
 register_label.pack(pady=10)
 
-back_button_account = tk.Button(register_frame, text="Back", command=show_menu)
+back_button_account = tk.Button(second_frame, text="Back", command=show_menu)
 back_button_account.pack(pady=10)
 
-username_label = tk.Label(register_frame, text="Username:")
+username_label = tk.Label(second_frame, text="Username:")
 username_label.pack(pady=5)
-username_entry = tk.Entry(register_frame)
+username_entry = tk.Entry(second_frame)
 username_entry.pack(pady=5)
 
-password_label = tk.Label(register_frame, text="Password:")
+password_label = tk.Label(second_frame, text="Password:")
 password_label.pack(pady=5)
-password_entry = tk.Entry(register_frame, show="*")
+password_entry = tk.Entry(second_frame, show="*")
 password_entry.pack(pady=5)
 
-register_button = tk.Button(register_frame, text="Create account", command=register)
+student_id_label = tk.Label(second_frame, text="Student ID:")
+student_id_label.pack(pady=5)
+student_id_entry = tk.Entry(second_frame)
+student_id_entry.pack(pady=5)
+
+name_label = tk.Label(second_frame, text="Name:")
+name_label.pack(pady=5)
+name_entry = tk.Entry(second_frame)
+name_entry.pack(pady=5)
+
+date_of_birth_label = tk.Label(second_frame, text="Date of birth:")
+date_of_birth_label.pack(pady=5)
+date_of_birth_entry = tk.Entry(second_frame)
+date_of_birth_entry.pack(pady=5)
+
+class_label = tk.Label(second_frame, text="Class:")
+class_label.pack(pady=5)
+class_entry = tk.Entry(second_frame)
+class_entry.pack(pady=5)
+
+button_frame = tk.Frame(second_frame)
+button_frame.pack(pady=10)
+
+upload_image_label = tk.Label(button_frame, text="Photo:")
+upload_image_label.grid(row=0, column=0, pady=5, sticky="w")
+
+# Create a button to browse and upload an image
+browse_button = tk.Button(button_frame, text="Browse", command=browse_image)
+browse_button.grid(row=0, column=1, pady=5, padx=10, sticky="w")
+
+check_image_button = tk.Button(button_frame, text="Check image", command=check_image)
+check_image_button.grid(row=0, column=2, pady=5, padx=10, sticky="w")
+
+# Create a label to display the uploaded image
+image_label = tk.Label(second_frame)
+image_label.pack(pady=10)
+
+register_button = tk.Button(second_frame, text="Create account", command=register)
 register_button.pack(pady=10)
 
-register_frame.pack(padx=20, pady=20)
+fill_label = tk.Label(second_frame)
+fill_label.pack(pady=100)
+
+canvas.create_window((100, 0), window=second_frame, anchor="nw")
 
 # Create the about frame
 about_frame = tk.Frame(root)
