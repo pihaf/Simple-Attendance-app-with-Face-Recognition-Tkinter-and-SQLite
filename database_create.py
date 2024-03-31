@@ -48,7 +48,7 @@ def create_tables():
     cursor.execute('''CREATE TABLE IF NOT EXISTS student_accounts
                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
                     student_id TEXT UNIQUE,
-                    username TEXT,
+                    username TEXT UNIQUE,
                     password TEXT,
                     FOREIGN KEY (student_id) REFERENCES students(student_id))''')
 

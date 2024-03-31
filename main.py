@@ -10,6 +10,7 @@ import database_functions
 import datetime
 import os
 import shutil
+import io
 
 def get_day_of_week():
     current_date = datetime.date.today()
@@ -82,13 +83,9 @@ def take_attendance_button():
     result = database_functions.create_attendance_record(student_id_found, get_day_of_week(), get_current_period())
     print(result)
 
-def show_account():
-    # Code for the "Account" functionality
-    print("Showing account...")
-
-def show_about():
-    # Code for the "About" functionality
-    print("Showing about...")
+def destroy_contents(frame):
+    for widget in frame.winfo_children():
+        widget.destroy()
 
 def show_menu():
     menu_frame.pack()
@@ -97,6 +94,7 @@ def show_menu():
     login_frame.pack_forget()
     register_frame.pack_forget()
     about_frame.pack_forget()
+    account_info_frame.pack_forget()
 
     stop_capture()
 
@@ -107,17 +105,29 @@ def show_attendance():
     login_frame.pack_forget()
     register_frame.pack_forget()
     about_frame.pack_forget()
+    account_info_frame.pack_forget()
     
     start_capture()
-    show_frame()
+    show_video()
+
+def show_account_info_frame():
+    menu_frame.pack_forget()
+    attendance_frame.pack_forget()
+    account_frame.pack_forget()
+    login_frame.pack_forget()
+    register_frame.pack_forget()
+    about_frame.pack_forget()
+
+    display_student_info()
+    account_info_frame.pack()
 
 # Live face capture using device camera
-def show_frame():
+def show_video():
     global student_id_found
     # Grab a single frame of video
     ret, frame = cap.read()
     if not ret:  # Check if the frame was successfully captured
-        attendance_label.after(10, show_frame)  # Retry after a delay
+        attendance_label.after(10, show_video)  # Retry after a delay
         return
     frame = cv2.flip(frame, 1)
     cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
@@ -198,21 +208,68 @@ def show_frame():
     attendance_label.imgtk = imgtk
     attendance_label.configure(image=imgtk)
 
-    attendance_label.after(10, show_frame)
+    attendance_label.after(10, show_video)
+
+def display_student_info():
+    global logged_in
+    global username
+    global password
+    if logged_in:
+        try:
+            student_info = database_functions.get_student_data(username, password)
+            
+            student_id_label = tk.Label(info_display_frame, text=f"Student ID: {student_info['student_id']}")
+            student_id_label.pack()
+
+            name_label = tk.Label(info_display_frame, text=f"Name: {student_info['name']}")
+            name_label.pack()
+
+            dob_label = tk.Label(info_display_frame, text=f"Date of Birth: {student_info['date_of_birth']}")
+            dob_label.pack()
+
+            class_label = tk.Label(info_display_frame, text=f"Class: {student_info['class']}")
+            class_label.pack()
+
+            # Display student image
+            image_data = student_info['image']
+            image = Image.open(io.BytesIO(image_data))
+            image = image.resize((200, 200)) 
+            photo = ImageTk.PhotoImage(image)
+            image_label = tk.Label(info_display_frame, image=photo)
+            image_label.image = photo  # Store a reference to prevent the image from being garbage collected
+            image_label.pack()
+        except Exception as e:
+            print("Error:", str(e))
 
 def login():
     global logged_in
     global username
     global password
-    # Code for the login functionality
     print("Login")
-    username = username_entry.get()
-    password = password_entry.get()
-    # Add your login logic here
-    if username == "admin" and password == "password":
-        logged_in = True
-        account_button.pack_forget()  
-        show_menu()
+    username = login_username_entry.get()
+    password = login_password_entry.get()
+
+    print("username: ", username)
+    print("password: ", password)
+    try:
+        if "admin" in username:
+            if database_functions.check_admin_login(username, password):
+                logged_in = True
+                account_small_frame1.pack_forget() 
+                account_small_frame2.pack(pady=10)
+                show_menu()
+            else:
+                raise ValueError('Invalid username or password of admin account.')
+        else:
+            if database_functions.check_student_login(username, password):
+                logged_in = True
+                account_small_frame1.pack_forget() 
+                account_small_frame2.pack(pady=10)
+                show_menu()
+            else:
+                raise ValueError('Invalid username or password of student account.')
+    except Exception as e:
+        print("Error:", str(e))
 
 def register():
     global new_account_face_encoding
@@ -222,20 +279,22 @@ def register():
     global username
     global password
 
-    username = username_entry.get()
-    password = password_entry.get()
-    student_id = student_id_entry.get()
-    name = name_entry.get()
-    dob = date_of_birth_entry.get()
-    student_class = class_entry.get()
+    username = register_username_entry.get()
+    password = register_password_entry.get()
+    student_id = register_student_id_entry.get()
+    name = register_name_entry.get()
+    dob = register_date_of_birth_entry.get()
+    student_class = register_class_entry.get()
     destination_path = os.path.join("images", image_name)  # Destination path in the "images" directory
     shutil.copy2(image_path, destination_path)  # Copy the file to the destination path
     path = 'images/' + image_name
     try:
-        database_functions.create_student_account(student_id, name, dob, student_class, path, username, password)
+        database_functions.create_student_record(student_id, name, dob, student_class, path)
+        database_functions.create_student_account(student_id, username, password)
         student_image_encodings.append(new_account_face_encoding)
         logged_in = True
-        account_button.pack_forget()  # Hide the login button when logged in
+        account_small_frame1.pack_forget() 
+        account_small_frame2.pack(pady=10)
         show_menu()
     except Exception as e:
         print("Error:", str(e))
@@ -244,13 +303,18 @@ def logout():
     global logged_in
     global username
     global password
-    # Code for the logout functionality
+
     print("Logout")
     logged_in = False
     username = ""
     password = ""
-    account_button.pack()  # Show the login button when logged out
-    show_menu()  # Go back to the main menu after logout
+    account_small_frame1.pack(pady=10)
+    account_small_frame2.pack_forget()
+    show_menu() 
+
+def back_to_account():
+    destroy_contents(info_display_frame)
+    show_account_scene()
 
 def show_account_scene():
     menu_frame.pack_forget()
@@ -259,6 +323,7 @@ def show_account_scene():
     login_frame.pack_forget()
     register_frame.pack_forget()
     about_frame.pack_forget()
+    account_info_frame.pack_forget()
 
 def show_login_scene():
     menu_frame.pack_forget()
@@ -267,6 +332,7 @@ def show_login_scene():
     login_frame.pack()
     register_frame.pack_forget()
     about_frame.pack_forget()
+    account_info_frame.pack_forget()
 
 def show_register_scene():
     menu_frame.pack_forget()
@@ -275,6 +341,7 @@ def show_register_scene():
     login_frame.pack_forget()
     register_frame.pack()
     about_frame.pack_forget()    
+    account_info_frame.pack_forget()
 
 def browse_image():
     global image_path
@@ -342,6 +409,7 @@ def show_about_scene():
     login_frame.pack_forget()
     register_frame.pack_forget()
     about_frame.pack()
+    account_info_frame.pack_forget()
 
 root = tk.Tk()
 root.title("Attendance App")
@@ -377,6 +445,9 @@ title_bar.pack(fill="x")
 # Create the main menu frame
 menu_frame = tk.Frame(root)
 
+menu_label = tk.Label(menu_frame, text="Attendance App", font=("Arial", 16))
+menu_label.pack(pady=10)
+
 attendance_button = tk.Button(menu_frame, text="Take Attendance", command=show_attendance)
 attendance_button.pack(pady=10)
 
@@ -411,19 +482,40 @@ account_frame = tk.Frame(root)
 account_label = tk.Label(account_frame, text="Account Scene", font=("Arial", 16))
 account_label.pack(pady=10)
 
-new_frame = tk.Frame(account_frame)
-new_frame.pack(pady=10)
-
-login_button = tk.Button(new_frame, text="Login", command=show_login_scene)
-login_button.grid(row=0, column=1, pady=5, padx=10, sticky="w")
-
-register_button = tk.Button(new_frame, text="Register", command=show_register_scene)
-register_button.grid(row=0, column=2, pady=5, padx=10, sticky="w")
-
 back_button_account = tk.Button(account_frame, text="Back", command=show_menu)
 back_button_account.pack(pady=10)
 
+account_small_frame1 = tk.Frame(account_frame)
+account_small_frame1.pack(pady=10)
+
+login_button = tk.Button(account_small_frame1, text="Login", command=show_login_scene)
+login_button.grid(row=0, column=1, pady=5, padx=10, sticky="w")
+
+register_button = tk.Button(account_small_frame1, text="Register", command=show_register_scene)
+register_button.grid(row=0, column=2, pady=5, padx=10, sticky="w")
+
+account_small_frame2 = tk.Frame(account_frame)
+account_small_frame2.pack(pady=10)
+
+account_info_button = tk.Button(account_small_frame2, text="Account info", command=show_account_info_frame)
+account_info_button.grid(row=0, column=1, pady=5, padx=10, sticky="w")
+
+logout_button = tk.Button(account_small_frame2, text="Logout", command=logout)
+logout_button.grid(row=0, column=2, pady=5, padx=10, sticky="w")
+
+account_small_frame2.pack_forget()
 account_frame.pack(padx=20, pady=20)
+
+ # Create the account info frame
+account_info_frame = tk.Frame(root)
+
+back_button_account_info = tk.Button(account_info_frame, text="Back", command=back_to_account)
+back_button_account_info.pack(pady=10)
+
+info_display_frame = tk.Frame(account_info_frame)
+info_display_frame.pack(pady=10)
+
+account_info_frame.pack(padx=20, pady=20)
 
 # Login frame
 login_frame = tk.Frame(root)
@@ -434,15 +526,15 @@ login_label.pack(pady=10)
 back_button_account = tk.Button(login_frame, text="Back", command=show_menu)
 back_button_account.pack(pady=10)
 
-username_label = tk.Label(login_frame, text="Username:")
-username_label.pack(pady=5)
-username_entry = tk.Entry(login_frame)
-username_entry.pack(pady=5)
+login_username_label = tk.Label(login_frame, text="Username:")
+login_username_label.pack(pady=5)
+login_username_entry = tk.Entry(login_frame)
+login_username_entry.pack(pady=5)
 
-password_label = tk.Label(login_frame, text="Password:")
-password_label.pack(pady=5)
-password_entry = tk.Entry(login_frame, show="*")
-password_entry.pack(pady=5)
+login_password_label = tk.Label(login_frame, text="Password:")
+login_password_label.pack(pady=5)
+login_password_entry = tk.Entry(login_frame, show="*")
+login_password_entry.pack(pady=5)
 
 login_button = tk.Button(login_frame, text="Login", command=login)
 login_button.pack(pady=10)
@@ -475,35 +567,35 @@ register_label.pack(pady=10)
 back_button_account = tk.Button(second_frame, text="Back", command=show_menu)
 back_button_account.pack(pady=10)
 
-username_label = tk.Label(second_frame, text="Username:")
-username_label.pack(pady=5)
-username_entry = tk.Entry(second_frame)
-username_entry.pack(pady=5)
+register_username_label = tk.Label(second_frame, text="Username:")
+register_username_label.pack(pady=5)
+register_username_entry = tk.Entry(second_frame)
+register_username_entry.pack(pady=5)
 
-password_label = tk.Label(second_frame, text="Password:")
-password_label.pack(pady=5)
-password_entry = tk.Entry(second_frame, show="*")
-password_entry.pack(pady=5)
+register_password_label = tk.Label(second_frame, text="Password:")
+register_password_label.pack(pady=5)
+register_password_entry = tk.Entry(second_frame, show="*")
+register_password_entry.pack(pady=5)
 
-student_id_label = tk.Label(second_frame, text="Student ID:")
-student_id_label.pack(pady=5)
-student_id_entry = tk.Entry(second_frame)
-student_id_entry.pack(pady=5)
+register_student_id_label = tk.Label(second_frame, text="Student ID:")
+register_student_id_label.pack(pady=5)
+register_student_id_entry = tk.Entry(second_frame)
+register_student_id_entry.pack(pady=5)
 
-name_label = tk.Label(second_frame, text="Name:")
-name_label.pack(pady=5)
-name_entry = tk.Entry(second_frame)
-name_entry.pack(pady=5)
+register_name_label = tk.Label(second_frame, text="Name:")
+register_name_label.pack(pady=5)
+register_name_entry = tk.Entry(second_frame)
+register_name_entry.pack(pady=5)
 
-date_of_birth_label = tk.Label(second_frame, text="Date of birth:")
-date_of_birth_label.pack(pady=5)
-date_of_birth_entry = tk.Entry(second_frame)
-date_of_birth_entry.pack(pady=5)
+register_date_of_birth_label = tk.Label(second_frame, text="Date of birth:")
+register_date_of_birth_label.pack(pady=5)
+register_date_of_birth_entry = tk.Entry(second_frame)
+register_date_of_birth_entry.pack(pady=5)
 
-class_label = tk.Label(second_frame, text="Class:")
-class_label.pack(pady=5)
-class_entry = tk.Entry(second_frame)
-class_entry.pack(pady=5)
+register_class_label = tk.Label(second_frame, text="Class:")
+register_class_label.pack(pady=5)
+register_class_entry = tk.Entry(second_frame)
+register_class_entry.pack(pady=5)
 
 button_frame = tk.Frame(second_frame)
 button_frame.pack(pady=10)

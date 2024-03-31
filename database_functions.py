@@ -101,7 +101,55 @@ def create_attendance_record(student_id, day_of_week, periods):
         conn.close()
         return "No course found."
     
-def create_student_account(student_id, name, date_of_birth, class_name, image_path, username, password):
+def get_student_data(username, password):
+    conn = sqlite3.connect('attendance.db')
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM student_accounts WHERE username=? AND password=?", (username, password))
+    account_data = cursor.fetchone()  
+
+    if account_data:
+        student_id = account_data[1]
+
+        cursor.execute("SELECT * FROM students WHERE student_id=?", (student_id,))
+        student_data = cursor.fetchone()  
+
+        if student_data:
+            student_info = {
+                'student_id': student_data[1],
+                'name': student_data[2],
+                'date_of_birth': student_data[3],
+                'class': student_data[4],
+                'image': student_data[5]
+            }
+            return student_info
+        else:
+            print(f"No student found with ID {student_id}")
+    else:
+        print("Invalid username or password")
+
+    conn.close()
+
+    return None
+
+def create_student_record(student_id, name, date_of_birth, class_name, image_path):
+    conn = sqlite3.connect('attendance.db')
+    cursor = conn.cursor()
+    try:
+        with open(image_path, 'rb') as f:
+            image_data = f.read()
+        # Insert the student data into the students table
+        cursor.execute('INSERT INTO students (student_id, name, date_of_birth, class, image) VALUES (?, ?, ?, ?, ?)',
+                       (student_id, name, date_of_birth, class_name, image_data))
+        conn.commit()
+
+        print("Student record created successfully.")
+    except sqlite3.IntegrityError:
+        print("Error: Student ID already exists.")
+    except Exception as e:
+        print("Error in student info creation: ", str(e))
+
+def create_student_account(student_id, username, password):
     conn = sqlite3.connect('attendance.db')
     cursor = conn.cursor()
     try:
@@ -110,18 +158,26 @@ def create_student_account(student_id, name, date_of_birth, class_name, image_pa
                        (student_id, username, password))
         conn.commit()
 
-        with open(image_path, 'rb') as f:
-            image_data = f.read()
-        # Insert the student data into the students table
-        cursor.execute('INSERT INTO students (student_id, name, date_of_birth, class, image) VALUES (?, ?, ?, ?, ?)',
-                       (student_id, name, date_of_birth, class_name, image_data))
-        conn.commit()
-
         print("Student account created successfully.")
     except sqlite3.IntegrityError:
         print("Error: Student ID already exists.")
     except Exception as e:
         print("Error in student account creation: ", str(e))
+
+def check_student_login(username, password):
+    conn = sqlite3.connect('attendance.db')
+    cursor = conn.cursor()
+    
+    cursor.execute('SELECT * FROM student_accounts WHERE username = ? AND password = ?', (username, password))
+    account = cursor.fetchone()
+    conn.close()
+
+    if account:
+        print("Login successful!")
+        return True
+    else:
+        print("Invalid username or password.")
+        return False
 
 def create_admin_account(username, password):
     conn = sqlite3.connect('attendance.db')
@@ -134,6 +190,22 @@ def create_admin_account(username, password):
         print("Admin account created successfully.")
     except sqlite3.IntegrityError:
         print("Error: Username already exists.")
+
+def check_admin_login(username, password):
+    conn = sqlite3.connect('attendance.db')
+    cursor = conn.cursor()
+    
+    cursor.execute('SELECT * FROM admin_accounts WHERE username = ? AND password = ?', (username, password))
+    account = cursor.fetchone()
+    
+    conn.close()
+    if account:
+        print("Login successful!")
+        return True
+    else:
+        print("Invalid username or password.")
+        return False
+    
 
 def print_table_data(table_name):
     # Connect to the SQLite database
