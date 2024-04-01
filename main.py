@@ -46,7 +46,6 @@ def on_mousewheel(event):
 student_ids = database_functions.get_all_students_ids()
 student_names = database_functions.get_all_students_names()
 student_images = database_functions.get_all_students_images()
-student_status = ['Unmark', 'Marked', 'Unmark']
 student_image_encodings = []
 
 for row in student_images:
@@ -62,6 +61,8 @@ for row in student_images:
     student_image_encodings.append(face_encoding)
 
 student_id_found = ''
+course_id_found = ''
+student_name_found = 'Unknown'
 logged_in = False
 username = ""
 password = ""
@@ -74,16 +75,28 @@ def start_capture():
     # cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
 def stop_capture():
-    if 'cap' in globals():
+    global cap
+    if 'cap' in globals() and cap is not None:
         cap.release()
+        cv2.destroyAllWindows()
+        cap = None
 
 def exit_app():
     root.destroy()
 
 def take_attendance_button():
     global student_id_found
-    result = database_functions.create_attendance_record(student_id_found, get_day_of_week(), get_current_period())
-    print(result)
+    global course_id_found
+    global student_name_found
+
+    if student_name_found == 'Unknown':
+        messagebox.showerror("Failed", "Couldn't recognize face. Check if face is registered or try again.")
+    else: 
+        result = database_functions.create_attendance_record(student_id_found, get_day_of_week(), get_current_period())
+        if result == "No courses found.":
+            messagebox.showerror("Failed", "No courses found.")
+        else:
+            messagebox.showinfo("Success", "Current course has been marked.")
 
 def destroy_contents(frame):
     for widget in frame.winfo_children():
@@ -103,6 +116,12 @@ def show_menu():
     stop_capture()
 
 def show_attendance():
+    global student_id_found
+    global course_id_found
+    global student_name_found
+    student_id_found = ''
+    course_id_found = ''
+    student_name_found = "Unknown"
     menu_frame.pack_forget()
     attendance_frame.pack()
     account_frame.pack_forget()
@@ -113,6 +132,7 @@ def show_attendance():
     courses_frame.pack_forget()
     attendance_history_frame.pack_forget()
     
+    stop_capture() 
     start_capture()
     show_video()
 
@@ -132,6 +152,11 @@ def show_account_info_frame():
 # Live face capture using device camera
 def show_video():
     global student_id_found
+    global course_id_found
+    global student_name_found
+    global cap
+    if cap is None:
+        return
     # Grab a single frame of video
     ret, frame = cap.read()
     if not ret:  # Check if the frame was successfully captured
@@ -165,6 +190,7 @@ def show_video():
         best_match_index = np.argmin(face_distances)
         if matches[best_match_index]:
             name = student_names[best_match_index]
+            student_name_found = name
             student_id = student_ids[best_match_index]
             student_id_found = student_ids[best_match_index]
 
@@ -175,6 +201,7 @@ def show_video():
             # print("Periods: ", get_current_period())
             # print("Course retrieved: ", course_data)
             if course_data != None:
+                course_id_found = course_data[0]
                 course_name = course_data[1]
                 
         face_names.append(name)
@@ -187,12 +214,12 @@ def show_video():
         bottom *= 4
         left *= 4
 
-        # Check status
+        # Check status of course
         if name != 'Unknown':
-            if student_status[best_match_index] == 'Unmark':
+            if database_functions.get_attendance_record(student_id_found, course_id_found) is None:
                 color = (0, 0, 255)
                 text = 'Unmark'
-            elif student_status[best_match_index] == 'Marked':
+            else:
                 color = (0,128,0)
                 text = 'Marked'
         else:
@@ -253,6 +280,9 @@ def login():
 
 def register():
     global new_account_face_encoding
+    global student_ids
+    global student_names
+    global student_images
     global image_name
     global image_path
     global logged_in
@@ -276,6 +306,9 @@ def register():
         database_functions.create_student_record(student_id, name, dob, student_class, path)
         database_functions.create_student_account(student_id, username, password)
         student_image_encodings.append(new_account_face_encoding)
+        student_ids = database_functions.get_all_students_ids()
+        student_names = database_functions.get_all_students_names()
+        student_images = database_functions.get_all_students_images()
         logged_in = True
         account_small_frame1.pack_forget() 
         account_small_frame2.pack(pady=10)

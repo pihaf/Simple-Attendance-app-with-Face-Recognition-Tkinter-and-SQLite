@@ -107,8 +107,16 @@ def create_attendance_record(student_id, day_of_week, periods):
     else:
         cursor.close()
         conn.close()
-        return "No course found."
+        return "No courses found."
     
+def get_attendance_record(student_id, course_id):
+    conn = sqlite3.connect('attendance.db')
+    cursor = conn.cursor()
+    current_date = datetime.date.today().strftime('%Y-%m-%d')
+    cursor.execute("SELECT * FROM attendance WHERE student_id=? AND course_id=? AND DATE(timestamp)=?", (student_id, course_id, current_date))
+    row = cursor.fetchone()
+    return list(row) if row else None
+
 def get_student_data(username, password):
     conn = sqlite3.connect('attendance.db')
     cursor = conn.cursor()
@@ -239,5 +247,3 @@ def print_table_data(table_name):
     # Close the cursor and the connection
     cursor.close()
     conn.close()
-
-#print_table_data('student_accounts')
