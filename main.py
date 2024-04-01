@@ -11,6 +11,7 @@ import datetime
 import os
 import shutil
 import io
+from tkinter_table import Table, ScrollableTable
 
 def get_day_of_week():
     current_date = datetime.date.today()
@@ -95,6 +96,8 @@ def show_menu():
     register_frame.pack_forget()
     about_frame.pack_forget()
     account_info_frame.pack_forget()
+    courses_frame.pack_forget()
+    attendance_history_frame.pack_forget()
 
     stop_capture()
 
@@ -106,6 +109,8 @@ def show_attendance():
     register_frame.pack_forget()
     about_frame.pack_forget()
     account_info_frame.pack_forget()
+    courses_frame.pack_forget()
+    attendance_history_frame.pack_forget()
     
     start_capture()
     show_video()
@@ -117,6 +122,8 @@ def show_account_info_frame():
     login_frame.pack_forget()
     register_frame.pack_forget()
     about_frame.pack_forget()
+    courses_frame.pack_forget()
+    attendance_history_frame.pack_forget()
 
     display_student_info()
     account_info_frame.pack()
@@ -210,37 +217,6 @@ def show_video():
 
     attendance_label.after(10, show_video)
 
-def display_student_info():
-    global logged_in
-    global username
-    global password
-    if logged_in:
-        try:
-            student_info = database_functions.get_student_data(username, password)
-            
-            student_id_label = tk.Label(info_display_frame, text=f"Student ID: {student_info['student_id']}")
-            student_id_label.pack()
-
-            name_label = tk.Label(info_display_frame, text=f"Name: {student_info['name']}")
-            name_label.pack()
-
-            dob_label = tk.Label(info_display_frame, text=f"Date of Birth: {student_info['date_of_birth']}")
-            dob_label.pack()
-
-            class_label = tk.Label(info_display_frame, text=f"Class: {student_info['class']}")
-            class_label.pack()
-
-            # Display student image
-            image_data = student_info['image']
-            image = Image.open(io.BytesIO(image_data))
-            image = image.resize((200, 200)) 
-            photo = ImageTk.PhotoImage(image)
-            image_label = tk.Label(info_display_frame, image=photo)
-            image_label.image = photo  # Store a reference to prevent the image from being garbage collected
-            image_label.pack()
-        except Exception as e:
-            print("Error:", str(e))
-
 def login():
     global logged_in
     global username
@@ -312,9 +288,124 @@ def logout():
     account_small_frame2.pack_forget()
     show_menu() 
 
+def display_student_info():
+    global logged_in
+    global username
+    global password
+    if logged_in:
+        try:
+            student_info = database_functions.get_student_data(username, password)
+
+            # Display student image
+            image_data = student_info['image']
+            image = Image.open(io.BytesIO(image_data))
+            image = image.resize((200, 200)) 
+            photo = ImageTk.PhotoImage(image)
+            image_label = tk.Label(info_display_frame, image=photo)
+            image_label.image = photo  # Store a reference to prevent the image from being garbage collected
+            image_label.pack()
+
+            table_frame = tk.Frame(info_display_frame)
+            table_frame.pack(fill=tk.BOTH, expand=True)
+
+            columns = ("Info", "")
+            data = [
+                ("Student ID", student_info['student_id']),
+                ("Name", student_info['name']),
+                ("Date of Birth", student_info['date_of_birth']),
+                ("Class", student_info['class'])
+            ]
+
+            table = Table(table_frame, columns, data)
+            table.pack(fill=tk.BOTH, expand=True)
+
+            info_button_frame = tk.Frame(info_display_frame)
+            info_button_frame.pack(pady=10)
+
+            Enrolled_courses_button = tk.Button(info_button_frame, text="Enrolled courses", command=show_courses_scene)
+            Enrolled_courses_button.grid(row=0, column=1, pady=5, padx=10, sticky="w")
+
+            attendance_history_button = tk.Button(info_button_frame, text="Attendance history", command=show_attendance_history)
+            attendance_history_button.grid(row=0, column=2, pady=5, padx=10, sticky="w")
+        except Exception as e:
+            print("Error:", str(e))
+
+def display_courses_of_student():
+    global logged_in
+    global username
+    global password
+    if logged_in:
+        try:
+            student_info = database_functions.get_student_data(username, password)
+            courses_data = database_functions.get_courses_of_student(student_id=student_info['student_id'])
+            columns = ("Course ID", "Course Code", "Course Name", "Day of week", "Periods", "Location")
+
+            courses_label = tk.Label(courses_frame, text="Enrolled courses", font=("Arial", 16))
+            courses_label.pack(pady=10)
+
+            back_button_courses = tk.Button(courses_frame, text="Back", command=back_to_account_info)
+            back_button_courses.pack(pady=10)
+
+            table = ScrollableTable(courses_frame, columns, courses_data)
+            table.pack(fill=tk.BOTH, expand=True)
+        except Exception as e:
+            print("Error:", str(e))
+
+def display_attendance_history():
+    global logged_in
+    global username
+    global password
+    if logged_in:
+        try:
+            student_info = database_functions.get_student_data(username, password)
+            attendance_data = database_functions.get_attendance_records_of_student(student_id=student_info['student_id'])
+            columns = ("ID", "Student ID", "Course ID", "Timestamp", "Status")
+
+            attendance_history_label = tk.Label(attendance_history_frame, text="Enrolled courses", font=("Arial", 16))
+            attendance_history_label.pack(pady=10)
+
+            back_button_attendance_history = tk.Button(attendance_history_frame, text="Back", command=back_to_account_info)
+            back_button_attendance_history.pack(pady=10)
+
+            table = ScrollableTable(attendance_history_frame, columns, attendance_data)
+            table.pack(fill=tk.BOTH, expand=True)
+        except Exception as e:
+            print("Error:", str(e))
+
 def back_to_account():
     destroy_contents(info_display_frame)
     show_account_scene()
+
+def back_to_account_info():
+    destroy_contents(attendance_history_frame)
+    destroy_contents(courses_frame)
+    show_account_info_frame()
+
+def show_courses_scene():
+    menu_frame.pack_forget()
+    attendance_frame.pack_forget()
+    account_frame.pack_forget()
+    login_frame.pack_forget()
+    register_frame.pack_forget()
+    about_frame.pack_forget()
+    account_info_frame.pack_forget()
+    attendance_history_frame.pack_forget()
+
+    display_courses_of_student()
+    courses_frame.pack()
+
+def show_attendance_history():
+    menu_frame.pack_forget()
+    attendance_frame.pack_forget()
+    account_frame.pack_forget()
+    login_frame.pack_forget()
+    register_frame.pack_forget()
+    about_frame.pack_forget()
+    account_info_frame.pack_forget()
+    courses_frame.pack_forget()
+
+    display_attendance_history()
+    attendance_history_frame.pack()
 
 def show_account_scene():
     menu_frame.pack_forget()
@@ -324,6 +415,8 @@ def show_account_scene():
     register_frame.pack_forget()
     about_frame.pack_forget()
     account_info_frame.pack_forget()
+    courses_frame.pack_forget()
+    attendance_history_frame.pack_forget()
 
 def show_login_scene():
     menu_frame.pack_forget()
@@ -333,6 +426,8 @@ def show_login_scene():
     register_frame.pack_forget()
     about_frame.pack_forget()
     account_info_frame.pack_forget()
+    courses_frame.pack_forget()
+    attendance_history_frame.pack_forget()
 
 def show_register_scene():
     menu_frame.pack_forget()
@@ -342,6 +437,8 @@ def show_register_scene():
     register_frame.pack()
     about_frame.pack_forget()    
     account_info_frame.pack_forget()
+    courses_frame.pack_forget()
+    attendance_history_frame.pack_forget()
 
 def browse_image():
     global image_path
@@ -410,6 +507,8 @@ def show_about_scene():
     register_frame.pack_forget()
     about_frame.pack()
     account_info_frame.pack_forget()
+    courses_frame.pack_forget()
+    attendance_history_frame.pack_forget()
 
 root = tk.Tk()
 root.title("Attendance App")
@@ -508,6 +607,10 @@ account_frame.pack(padx=20, pady=20)
 
  # Create the account info frame
 account_info_frame = tk.Frame(root)
+account_info_frame.pack(fill=tk.BOTH, expand=1)
+
+account_info_label = tk.Label(account_info_frame, text="Account info", font=("Arial", 16))
+account_info_label.pack(pady=10)
 
 back_button_account_info = tk.Button(account_info_frame, text="Back", command=back_to_account)
 back_button_account_info.pack(pady=10)
@@ -515,7 +618,13 @@ back_button_account_info.pack(pady=10)
 info_display_frame = tk.Frame(account_info_frame)
 info_display_frame.pack(pady=10)
 
-account_info_frame.pack(padx=20, pady=20)
+# Courses frame
+courses_frame = tk.Frame(root)
+courses_frame.pack(padx=20, pady=20)
+
+# Attendance history frame
+attendance_history_frame = tk.Frame(root)
+attendance_history_frame.pack(padx=20, pady=20)
 
 # Login frame
 login_frame = tk.Frame(root)
