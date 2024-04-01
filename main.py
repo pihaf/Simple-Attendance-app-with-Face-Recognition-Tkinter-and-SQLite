@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import filedialog
+from tkinter import messagebox
 from tkinter import ttk
 import cv2
 import sqlite3
@@ -225,8 +226,10 @@ def login():
     username = login_username_entry.get()
     password = login_password_entry.get()
 
-    print("username: ", username)
-    print("password: ", password)
+    if not username or not password:
+        messagebox.showwarning("Incomplete Fields", "Please fill in all the fields.")
+        return
+
     try:
         if "admin" in username:
             if database_functions.check_admin_login(username, password):
@@ -246,6 +249,7 @@ def login():
                 raise ValueError('Invalid username or password of student account.')
     except Exception as e:
         print("Error:", str(e))
+        messagebox.showerror("Error", str(e))
 
 def register():
     global new_account_face_encoding
@@ -261,6 +265,10 @@ def register():
     name = register_name_entry.get()
     dob = register_date_of_birth_entry.get()
     student_class = register_class_entry.get()
+    if not username or not password or not student_id or not name or not dob or not student_class or not image_path:
+        messagebox.showwarning("Incomplete Fields", "Please fill in all the fields.")
+        return
+
     destination_path = os.path.join("images", image_name)  # Destination path in the "images" directory
     shutil.copy2(image_path, destination_path)  # Copy the file to the destination path
     path = 'images/' + image_name
@@ -274,6 +282,7 @@ def register():
         show_menu()
     except Exception as e:
         print("Error:", str(e))
+        messagebox.showerror("Error", str(e))
 
 def logout():
     global logged_in
