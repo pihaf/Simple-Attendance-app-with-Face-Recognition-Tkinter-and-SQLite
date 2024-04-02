@@ -43,22 +43,38 @@ def get_current_period():
 def on_mousewheel(event):
     canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
-student_ids = database_functions.get_all_students_ids()
-student_names = database_functions.get_all_students_names()
-student_images = database_functions.get_all_students_images()
-student_image_encodings = []
+def compile_variables():
+    global student_ids
+    global student_names
+    global student_images
+    global student_image_encodings
+    student_data = database_functions.get_all_students_data()
+    for student in student_data:
+        student_ids.append(student[1])
+        student_names.append(student[2])
+        
+    student_images = database_functions.get_all_students_images()
+    student_image_encodings = []
 
-for row in student_images:
-    image_bytes = row[0]
-    # Convert the image bytes to a numpy array
-    image_array = np.frombuffer(image_bytes, np.uint8)
-    # Decode the image array
-    image = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
-    # Convert the image from BGR to RGB (face_recognition uses RGB format)
-    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    # Encode the face in the image
-    face_encoding = face_recognition.face_encodings(image_rgb)[0]
-    student_image_encodings.append(face_encoding)
+    for row in student_images:
+        image_bytes = row[0]
+        # Convert the image bytes to a numpy array
+        image_array = np.frombuffer(image_bytes, np.uint8)
+        # Decode the image array
+        image = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
+        # Convert the image from BGR to RGB (face_recognition uses RGB format)
+        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        # Encode the face in the image
+        face_encoding = face_recognition.face_encodings(image_rgb)[0]
+        student_image_encodings.append(face_encoding)
+
+    print("Student IDs: ", student_ids)
+    print("Student names: ", student_names)
+
+student_ids = []
+student_names = []
+student_images = []
+student_image_encodings = []
 
 student_id_found = ''
 course_id_found = ''
@@ -131,6 +147,7 @@ def show_attendance():
     account_info_frame.pack_forget()
     courses_frame.pack_forget()
     attendance_history_frame.pack_forget()
+    compile_variables()
     
     stop_capture() 
     start_capture()
@@ -178,8 +195,10 @@ def show_video():
 
     face_names = []
     course_data = []
-    course_name = 'Not found'
+    course_code = 'Not found'
     student_id = 'Not found'
+    if len(face_encodings) > 1:
+        messagebox.showerror("Error", "Too many faces detected.")
     for face_encoding in face_encodings:
         # See if the face is a match for the known face(s)
         matches = face_recognition.compare_faces(student_image_encodings, face_encoding)
@@ -189,10 +208,11 @@ def show_video():
         face_distances = face_recognition.face_distance(student_image_encodings, face_encoding)
         best_match_index = np.argmin(face_distances)
         if matches[best_match_index]:
+            # print("Best match index: ", best_match_index)
             name = student_names[best_match_index]
             student_name_found = name
             student_id = student_ids[best_match_index]
-            student_id_found = student_ids[best_match_index]
+            student_id_found = student_id
 
             # Get the course the student is supposed to study at this time 
             course_data = database_functions.get_student_course_by_schedule(student_id=student_id, day_of_week=get_day_of_week(), periods=get_current_period())
@@ -202,7 +222,7 @@ def show_video():
             # print("Course retrieved: ", course_data)
             if course_data != None:
                 course_id_found = course_data[0]
-                course_name = course_data[1]
+                course_code = course_data[1]
                 
         face_names.append(name)
 
@@ -234,7 +254,7 @@ def show_video():
         font = cv2.FONT_HERSHEY_DUPLEX
         cv2.putText(frame, "Name: " + name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
         cv2.putText(frame, "ID: " + student_id, (left + 6, bottom +30), font, 1.0, (255, 255, 255), 1)
-        cv2.putText(frame, "Course: " + course_name, (left + 6, bottom + 60), font, 1.0, (255, 255, 255), 1)
+        cv2.putText(frame, "Course: " + course_code, (left + 6, bottom + 60), font, 1.0, (255, 255, 255), 1)
         cv2.putText(frame, "Status: " + text, (left + 6, bottom +90), font, 1.0, (255, 255, 255), 1)
 
     cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)  # Convert frame back to RGBA format
@@ -261,6 +281,7 @@ def login():
         if "admin" in username:
             if database_functions.check_admin_login(username, password):
                 logged_in = True
+                messagebox.showinfo("Success", "Logging in...")
                 account_small_frame1.pack_forget() 
                 account_small_frame2.pack(pady=10)
                 show_menu()
@@ -269,6 +290,7 @@ def login():
         else:
             if database_functions.check_student_login(username, password):
                 logged_in = True
+                messagebox.showinfo("Success", "Logging in...")
                 account_small_frame1.pack_forget() 
                 account_small_frame2.pack(pady=10)
                 show_menu()
@@ -276,10 +298,9 @@ def login():
                 raise ValueError('Invalid username or password of student account.')
     except Exception as e:
         print("Error:", str(e))
-        messagebox.showerror("Error", str(e))
+        messagebox.showerror("Failed", str(e))
 
 def register():
-    global new_account_face_encoding
     global student_ids
     global student_names
     global student_images
@@ -305,11 +326,8 @@ def register():
     try:
         database_functions.create_student_record(student_id, name, dob, student_class, path)
         database_functions.create_student_account(student_id, username, password)
-        student_image_encodings.append(new_account_face_encoding)
-        student_ids = database_functions.get_all_students_ids()
-        student_names = database_functions.get_all_students_names()
-        student_images = database_functions.get_all_students_images()
         logged_in = True
+        messagebox.showinfo("Success", "Logging in registered account...")
         account_small_frame1.pack_forget() 
         account_small_frame2.pack(pady=10)
         show_menu()
@@ -508,7 +526,6 @@ def browse_image():
             print("No file is chosen. Please choose a file.")
 
 def check_image():
-    global new_account_face_encoding
     try: 
         image_array = np.array(image_object)  
         new_face_location = face_recognition.face_locations(image_array)
@@ -519,7 +536,6 @@ def check_image():
             print("Detected 1 face.")
             try: 
                 new_face_encoding = face_recognition.face_encodings(image_array)[0]
-                new_account_face_encoding = new_face_encoding
                 # See if the face is a match for the known face(s)
                 matches = face_recognition.compare_faces(student_image_encodings, new_face_encoding)
 
@@ -528,18 +544,23 @@ def check_image():
                 best_match_index = np.argmin(face_distances)
                 if matches[best_match_index]:
                     print("Face already existed in the database. Please try a different image.")
+                    messagebox.showerror("Failed", "Face already existed in the database. Please try a different image.")
                     register_button.config(state=tk.DISABLED)  
                 else:
                     print("Image accepted.")
+                    messagebox.showinfo("Success", "Image accepted.")
                     register_button.config(state=tk.NORMAL) 
             except Exception as e:
                 print("Error:", str(e))
                 print("Please try again or try a different image.")
+                messagebox.showerror("Failed", "Please try again or try a different image.")
         else:
             print("Image doesn't contain any faces. Please try a different image.")
+            messagebox.showerror("Failed", "Image doesn't contain any faces. Please try a different image.")
     except Exception as e:
         print("Error:", str(e))
         print("No images selected to be checked.")
+        messagebox.showerror("Failed", "No images selected to be checked.")
         
 def show_about_scene():
     menu_frame.pack_forget()

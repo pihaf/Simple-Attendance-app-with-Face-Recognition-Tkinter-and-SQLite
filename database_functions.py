@@ -8,25 +8,25 @@ def get_all_students_data():
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    return [list(row) for row in rows]
+    return rows
 
-def get_all_students_ids():
-    conn = sqlite3.connect('attendance.db')
-    cursor = conn.cursor()
-    cursor.execute('SELECT student_id FROM students')
-    rows = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return [row[0] for row in rows]
+# def get_all_students_ids():
+#     conn = sqlite3.connect('attendance.db')
+#     cursor = conn.cursor()
+#     cursor.execute('SELECT student_id FROM students')
+#     rows = cursor.fetchall()
+#     cursor.close()
+#     conn.close()
+#     return [row[0] for row in rows]
 
-def get_all_students_names():
-    conn = sqlite3.connect('attendance.db')
-    cursor = conn.cursor()
-    cursor.execute('SELECT name FROM students')
-    rows = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return [row[0] for row in rows]
+# def get_all_students_names():
+#     conn = sqlite3.connect('attendance.db')
+#     cursor = conn.cursor()
+#     cursor.execute('SELECT name FROM students')
+#     rows = cursor.fetchall()
+#     cursor.close()
+#     conn.close()
+#     return [row[0] for row in rows]
 
 def get_all_students_images():
     conn = sqlite3.connect('attendance.db')
