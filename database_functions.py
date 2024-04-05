@@ -78,6 +78,17 @@ def get_attendance_records_of_student(student_id):
     conn.close()
     return attendance_records
 
+def get_attendance_records_w_courses_info_of_student(student_id):
+    conn = sqlite3.connect('attendance.db')
+    cursor = conn.cursor()
+    cursor.execute('''SELECT attendance.id, student_id, course_id, courses.course_code, courses.day_of_week, courses.periods, attendance.timestamp, attendance.status
+                   FROM attendance 
+                   JOIN courses ON attendance.course_id = courses.id 
+                   WHERE student_id=?''', (student_id,))
+    attendance_records = cursor.fetchall()
+    conn.close()
+    return attendance_records
+
 # Create an attendance record if relevant info matched with that of the course
 def create_attendance_record(student_id, day_of_week, periods):
     conn = sqlite3.connect('attendance.db')

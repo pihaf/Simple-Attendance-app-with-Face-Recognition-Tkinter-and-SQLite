@@ -281,7 +281,7 @@ def login():
         if "admin" in username:
             if database_functions.check_admin_login(username, password):
                 logged_in = True
-                messagebox.showinfo("Success", "Logging in...")
+                messagebox.showinfo("Success", "Logged in.")
                 account_small_frame1.pack_forget() 
                 account_small_frame2.pack(pady=10)
                 show_menu()
@@ -290,7 +290,7 @@ def login():
         else:
             if database_functions.check_student_login(username, password):
                 logged_in = True
-                messagebox.showinfo("Success", "Logging in...")
+                messagebox.showinfo("Success", "Logged in.")
                 account_small_frame1.pack_forget() 
                 account_small_frame2.pack(pady=10)
                 show_menu()
@@ -327,7 +327,7 @@ def register():
         database_functions.create_student_record(student_id, name, dob, student_class, path)
         database_functions.create_student_account(student_id, username, password)
         logged_in = True
-        messagebox.showinfo("Success", "Logging in registered account...")
+        messagebox.showinfo("Success", "Logged in registered account...")
         account_small_frame1.pack_forget() 
         account_small_frame2.pack(pady=10)
         show_menu()
@@ -418,8 +418,8 @@ def display_attendance_history():
     if logged_in:
         try:
             student_info = database_functions.get_student_data(username, password)
-            attendance_data = database_functions.get_attendance_records_of_student(student_id=student_info['student_id'])
-            columns = ("ID", "Student ID", "Course ID", "Timestamp", "Status")
+            attendance_data = database_functions.get_attendance_records_w_courses_info_of_student(student_id=student_info['student_id'])
+            columns = ("ID", "Student ID", "Course ID", "Course Code","Day of week", "Periods","Timestamp", "Status")
 
             attendance_history_label = tk.Label(attendance_history_frame, text="Enrolled courses", font=("Arial", 16))
             attendance_history_label.pack(pady=10)
