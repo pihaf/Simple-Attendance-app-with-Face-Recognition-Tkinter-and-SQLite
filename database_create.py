@@ -81,10 +81,8 @@ def load_sample_data():
 
     for data in student_data:
         student_id, name, dob, class_name, image_path = data
-        with open(image_path, 'rb') as f:
-            image_data = f.read()
         cursor.execute('INSERT INTO students (student_id, name, date_of_birth, class, image) VALUES (?, ?, ?, ?, ?)',
-                       (student_id, name, dob, class_name, image_data))
+                       (student_id, name, dob, class_name, image_path))
 
     # Insert sample course data
     course_data = [

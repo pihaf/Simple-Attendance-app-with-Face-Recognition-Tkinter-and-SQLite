@@ -128,6 +128,15 @@ def get_attendance_record(student_id, course_id):
     row = cursor.fetchone()
     return list(row) if row else None
 
+def get_all_attendance_records():
+    conn = sqlite3.connect('attendance.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM attendance')
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return [list(row) for row in rows]
+
 def get_student_data(username, password):
     conn = sqlite3.connect('attendance.db')
     cursor = conn.cursor()
@@ -163,11 +172,9 @@ def create_student_record(student_id, name, date_of_birth, class_name, image_pat
     conn = sqlite3.connect('attendance.db')
     cursor = conn.cursor()
     try:
-        with open(image_path, 'rb') as f:
-            image_data = f.read()
         # Insert the student data into the students table
         cursor.execute('INSERT INTO students (student_id, name, date_of_birth, class, image) VALUES (?, ?, ?, ?, ?)',
-                       (student_id, name, date_of_birth, class_name, image_data))
+                       (student_id, name, date_of_birth, class_name, image_path))
         conn.commit()
 
         print("Student record created successfully.")
@@ -177,6 +184,9 @@ def create_student_record(student_id, name, date_of_birth, class_name, image_pat
         print("Error in student info creation: ", str(e))
 
 def create_student_account(student_id, username, password):
+    if "admin" in username:
+        print("Not allowed to have the name 'admin' in username.")
+        return
     conn = sqlite3.connect('attendance.db')
     cursor = conn.cursor()
     try:
