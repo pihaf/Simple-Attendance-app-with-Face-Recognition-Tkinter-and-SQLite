@@ -4,7 +4,7 @@ import cv2
 import sqlite3
 import os
 from geopy.geocoders import Nominatim
-import database_functions
+import database.database_functions as database_functions
 import datetime
 import tkinter as tk
 from PIL import Image, ImageTk

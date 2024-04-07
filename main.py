@@ -2,17 +2,18 @@ import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
 from tkinter import ttk
+import tkinter.font as tkfont
 import cv2
 import sqlite3
 import numpy as np
 import face_recognition
 from PIL import Image, ImageTk
-import database_functions
+import database.database_functions as database_functions
 import datetime
 import os
 import shutil
 import io
-from tkinter_table import Table, ScrollableTable
+from utils.tkinter_table import Table, ScrollableTable
 
 def get_day_of_week():
     current_date = datetime.date.today()
@@ -837,7 +838,7 @@ attendance_frame.pack(padx=20, pady=20)
 # Create the account frame
 account_frame = tk.Frame(root)
 
-account_label = tk.Label(account_frame, text="Account Scene", font=("Arial", 16))
+account_label = tk.Label(account_frame, text="Account", font=("Arial", 16))
 account_label.pack(pady=10)
 
 back_button_account = tk.Button(account_frame, text="Back", command=show_menu)
@@ -892,7 +893,7 @@ attendance_history_frame.pack(padx=20, pady=20)
 # Login frame
 login_frame = tk.Frame(root)
 
-login_label = tk.Label(login_frame, text="Login Scene", font=("Arial", 16))
+login_label = tk.Label(login_frame, text="Login", font=("Arial", 16))
 login_label.pack(pady=10)
 
 back_button_account = tk.Button(login_frame, text="Back", command=show_menu)
@@ -933,7 +934,7 @@ canvas.bind(
 # Create a frame inside the canvas
 second_frame = tk.Frame(canvas)
 
-register_label = tk.Label(second_frame, text="Register Scene", font=("Arial", 16))
+register_label = tk.Label(second_frame, text="Register", font=("Arial", 16))
 register_label.pack(pady=10)
 
 back_button_account = tk.Button(second_frame, text="Back", command=show_menu)
@@ -1002,11 +1003,15 @@ canvas.create_window((100, 0), window=second_frame, anchor="nw")
 # Create the about frame
 about_frame = tk.Frame(root)
 
-about_label = tk.Label(about_frame, text="About Scene", font=("Arial", 16))
+about_label = tk.Label(about_frame, text="About", font=("Arial", 16))
 about_label.pack(pady=10)
 
 back_button_about = tk.Button(about_frame, text="Back", command=show_menu)
 back_button_about.pack(pady=10)
+
+paragraph_text = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
+paragraph_label = tk.Label(about_frame, text=paragraph_text, wraplength=400)
+paragraph_label.pack(pady=10)
 
 about_frame.pack(padx=20, pady=20)
 
