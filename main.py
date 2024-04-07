@@ -46,26 +46,20 @@ def on_mousewheel(event):
 def compile_variables():
     global student_ids
     global student_names
-    global student_images
+    global student_image_path
     global student_image_encodings
     student_data = database_functions.get_all_students_data()
     for student in student_data:
         student_ids.append(student[1])
         student_names.append(student[2])
         
-    student_images = database_functions.get_all_students_images()
+    student_image_paths = database_functions.get_all_students_images()
     student_image_encodings = []
 
-    for row in student_images:
-        image_bytes = row[0]
-        # Convert the image bytes to a numpy array
-        image_array = np.frombuffer(image_bytes, np.uint8)
-        # Decode the image array
-        image = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
-        # Convert the image from BGR to RGB (face_recognition uses RGB format)
-        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    for row in student_image_paths:
+        student_image = face_recognition.load_image_file(row[0])
         # Encode the face in the image
-        face_encoding = face_recognition.face_encodings(image_rgb)[0]
+        face_encoding = face_recognition.face_encodings(student_image)[0]
         student_image_encodings.append(face_encoding)
 
     print("Student IDs: ", student_ids)
@@ -73,7 +67,7 @@ def compile_variables():
 
 student_ids = []
 student_names = []
-student_images = []
+student_image_path = []
 student_image_encodings = []
 
 student_id_found = ''
@@ -418,7 +412,7 @@ def login():
 def register():
     global student_ids
     global student_names
-    global student_images
+    global student_image_path
     global image_name
     global image_path
     global logged_in
@@ -440,14 +434,19 @@ def register():
         messagebox.showerror("Username error", "Username is not allowed to contain'admin'.")
         return
 
-    destination_path = os.path.join("images", image_name)  # Destination path in the "images" directory
-    shutil.copy2(image_path, destination_path)  # Copy the file to the destination path
-    path = 'images/' + image_name
     try:
         database_functions.create_student_record(student_id, name, dob, student_class, path)
         database_functions.create_student_account(student_id, username, password)
         logged_in = True
         isAdmin = False
+
+        # Here I use the image name to save for easy visualization
+        # In practice, it is recommended to use student id as the image name
+        # Change image_name = student_id
+        destination_path = os.path.join("images", image_name)  # Destination path in the "images" directory
+        shutil.copy2(image_path, destination_path)  # Copy the file to the destination path
+        path = 'images/' + image_name
+
         messagebox.showinfo("Success", "Logged in registered account...")
         account_small_frame1.pack_forget() 
         account_small_frame2.pack(pady=10)
@@ -811,6 +810,13 @@ title_bar.bind("<B1-Motion>", drag_window)
 title_bar.bind("<Button-1>", start_drag)
 title_bar.pack(fill="x")
 
+image = Image.open("images/background.jpg")
+background_image = ImageTk.PhotoImage(image)
+
+# Create a Label widget with the image as the background
+background_label = tk.Label(root, image=background_image)
+background_label.place(x=0, y=0, relwidth=1, relheight=1)
+
 # Create the main menu frame
 menu_frame = tk.Frame(root)
 
@@ -821,7 +827,7 @@ attendance_label = tk.Label(attendance_frame)
 attendance_label.pack()
 
 button = tk.Button(attendance_frame, text="Take attendance", command=take_attendance_button)
-button.pack(pady=10)
+button.pack()
 
 back_button_attendance = tk.Button(attendance_frame, text="Back", command=show_menu)
 back_button_attendance.pack(pady=10)
