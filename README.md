@@ -1,1 +1,1 @@
-# Attendance-app-with-Computer-Vision
+# Simple attendance app with Face Recognition, Tkinter and SQLite
